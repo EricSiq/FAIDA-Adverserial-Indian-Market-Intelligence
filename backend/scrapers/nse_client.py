@@ -46,8 +46,22 @@ class NSEClient:
             except Exception as err:
                 logger.debug(f"Cookie handshake notice: {err}")
 
+    @staticmethod
+    def _sanitize_symbol(symbol: str) -> Optional[str]:
+        import re
+        if not symbol or not isinstance(symbol, str):
+            return None
+        clean = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+        if re.fullmatch(r"^[A-Z0-9&_-]{1,20}$", clean):
+            return clean
+        return None
+
     def get_quote(self, symbol: str) -> Optional[Dict[str, Any]]:
-        clean_symbol = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+        clean_symbol = self._sanitize_symbol(symbol)
+        if not clean_symbol:
+            logger.warning(f"Invalid symbol rejected: {symbol}")
+            return None
+
         self._ensure_cookies()
         url = self.QUOTE_URL.format(symbol=clean_symbol)
 

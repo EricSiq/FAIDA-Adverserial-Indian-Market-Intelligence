@@ -15,11 +15,20 @@ class ScreenerClient:
         "Accept-Language": "en-US,en;q=0.9",
     }
 
+    @staticmethod
+    def _sanitize_symbol(symbol: str) -> Optional[str]:
+        if not symbol or not isinstance(symbol, str):
+            return None
+        clean = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+        if re.fullmatch(r"^[A-Z0-9&_-]{1,20}$", clean):
+            return clean
+        return None
+
     @classmethod
     def get_fundamentals(cls, symbol: str) -> Dict[str, Any]:
-        clean_symbol = symbol.strip().upper()
-        # Remove exchange suffixes if present
-        clean_symbol = clean_symbol.replace(".NS", "").replace(".BO", "")
+        clean_symbol = cls._sanitize_symbol(symbol)
+        if not clean_symbol:
+            return {"symbol": symbol, "error": "Invalid symbol format", "source": "SCREENER"}
 
         url = cls.BASE_URL.format(symbol=clean_symbol)
         try:

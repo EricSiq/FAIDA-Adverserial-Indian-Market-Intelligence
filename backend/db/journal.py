@@ -75,6 +75,7 @@ class DecisionJournal:
             return False
 
     def list_recent_decisions(self, limit: int = 20) -> List[Dict[str, Any]]:
+        safe_limit = max(1, min(100, int(limit)))
         with self._get_connection() as conn:
             cursor = conn.execute("""
                 SELECT id, symbol, exchange, action, target_price, current_price,
@@ -82,7 +83,7 @@ class DecisionJournal:
                 FROM decisions_journal
                 ORDER BY created_at DESC
                 LIMIT ?
-            """, (limit,))
+            """, (safe_limit,))
             cols = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             return [dict(zip(cols, row)) for row in rows]
