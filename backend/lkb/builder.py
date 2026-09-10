@@ -88,6 +88,34 @@ class LKBBuilder:
             ))
             fact_idx += 1
 
+        if yf_data.get("ema_20") and current_price:
+            ema20 = yf_data["ema_20"]
+            pos = "ABOVE" if current_price >= ema20 else "BELOW"
+            facts.append(LKBFact(
+                id=f"LKB-{fact_idx:02d}",
+                category=LKBFactCategory.TECHNICAL,
+                source="YFINANCE",
+                metric="20-Day Exponential Moving Average",
+                value=ema20,
+                unit="INR",
+                context=f"Short-term momentum gauge. Price is {pos} 20-EMA."
+            ))
+            fact_idx += 1
+
+        if yf_data.get("ema_50") and current_price:
+            ema50 = yf_data["ema_50"]
+            pos = "ABOVE" if current_price >= ema50 else "BELOW"
+            facts.append(LKBFact(
+                id=f"LKB-{fact_idx:02d}",
+                category=LKBFactCategory.TECHNICAL,
+                source="YFINANCE",
+                metric="50-Day Exponential Moving Average",
+                value=ema50,
+                unit="INR",
+                context=f"Medium-term trend gauge. Price is {pos} 50-EMA."
+            ))
+            fact_idx += 1
+
         if yf_data.get("ema_200") and current_price:
             ema200 = yf_data["ema_200"]
             pos = "ABOVE" if current_price >= ema200 else "BELOW"

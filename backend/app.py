@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.config import settings
 from backend.agents.orchestrator import SwarmOrchestrator
@@ -28,8 +28,8 @@ orchestrator = SwarmOrchestrator()
 journal = DecisionJournal()
 
 class AnalyzeRequest(BaseModel):
-    query: str
-    tone_level: int = 3
+    query: str = Field(..., min_length=2, max_length=500, description="User investment hypothesis")
+    tone_level: int = Field(3, ge=1, le=6, description="Adversarial tone continuum from 1 to 6")
     provider: Optional[str] = None
 
 class ConfigUpdateRequest(BaseModel):

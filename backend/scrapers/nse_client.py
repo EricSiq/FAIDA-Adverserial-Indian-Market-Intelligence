@@ -1,6 +1,9 @@
 import httpx
 from typing import Dict, Any, Optional
 import time
+import logging
+
+logger = logging.getLogger("faida.scrapers.nse")
 
 class NSEClient:
     """Resilient client for unofficial NSE India public API endpoints."""
@@ -20,6 +23,19 @@ class NSEClient:
         self.session = httpx.Client(headers=self.HEADERS, timeout=3.5, follow_redirects=True)
         self.last_handshake = 0.0
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
+        """Cleanly close the underlying HTTP client session."""
+        try:
+            self.session.close()
+        except Exception:
+            pass
+
     def _ensure_cookies(self):
         """Refresh cookie jar every 10 minutes or on first call."""
         now = time.time()
@@ -28,7 +44,7 @@ class NSEClient:
                 self.session.get(self.BASE_URL)
                 self.last_handshake = now
             except Exception as err:
-                print(f"[NSEClient] Cookie handshake warning: {err}")
+                logger.debug(f"Cookie handshake notice: {err}")
 
     def get_quote(self, symbol: str) -> Optional[Dict[str, Any]]:
         clean_symbol = symbol.strip().upper().replace(".NS", "").replace(".BO", "")

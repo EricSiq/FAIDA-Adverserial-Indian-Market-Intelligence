@@ -29,6 +29,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingOllamaModel = document.getElementById("setting-ollama-model");
   const settingGroqKey = document.getElementById("setting-groq-key");
 
+  // History Modal Elements
+  const historyBtn = document.getElementById("history-btn");
+  const historyModal = document.getElementById("history-modal");
+  const closeHistoryBtn = document.getElementById("close-history-btn");
+  const historyList = document.getElementById("history-list");
+
   let currentLKBFacts = [];
 
   const TONE_NAMES = {
@@ -60,6 +66,64 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   closeSettingsBtn.addEventListener("click", () => {
     settingsModal.classList.add("hidden");
+  });
+
+  // History Modal Open/Close & Fetch
+  historyBtn.addEventListener("click", async () => {
+    historyModal.classList.remove("hidden");
+    historyList.innerHTML = '<p class="empty-table-msg">Loading saved theses...</p>';
+    try {
+      const res = await fetch("/api/history");
+      const items = await res.json();
+      if (!items || items.length === 0) {
+        historyList.innerHTML = '<p class="empty-table-msg">No investment decisions recorded yet.</p>';
+        return;
+      }
+      historyList.innerHTML = "";
+      items.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "history-card";
+        const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : "";
+        card.innerHTML = `
+          <div class="history-card-left">
+            <div class="history-title">
+              <span>${escapeHtml(item.symbol)} (${escapeHtml(item.exchange)})</span>
+              <span class="history-action-badge ${escapeHtml(item.action)}">${escapeHtml(item.action)}</span>
+              ${item.target_price ? `<span style="font-size:12px; color:var(--text-muted);">@ ₹${item.target_price}</span>` : ""}
+            </div>
+            <div class="history-verdict">${escapeHtml(item.headline_verdict || "")}</div>
+          </div>
+          <div class="history-card-right">
+            <div class="history-score">${item.friction_score}/100</div>
+            <div class="history-date">${dateStr}</div>
+          </div>
+        `;
+        card.addEventListener("click", async () => {
+          try {
+            const detailRes = await fetch(`/api/history/${item.id}`);
+            const detail = await detailRes.json();
+            historyModal.classList.add("hidden");
+            if (welcomeCard) welcomeCard.style.display = "none";
+            renderAnalysisResponse({
+              adversarial_counter_thesis: detail.pre_mortem.headline_verdict + "\n\n" + (detail.pre_mortem.bearish_risks.map(r => `### ${r.risk_title}\n${r.argument}`).join("\n\n")),
+              elapsed_seconds: 0.0,
+              pre_mortem: detail.pre_mortem,
+              lkb_packet: detail.lkb_packet
+            });
+            updateLKBPanel(detail.lkb_packet, detail.pre_mortem);
+          } catch (err) {
+            alert("Error loading past decision: " + err);
+          }
+        });
+        historyList.appendChild(card);
+      });
+    } catch (err) {
+      historyList.innerHTML = `<p class="empty-table-msg" style="color:var(--accent-red)">Error loading history: ${err.message}</p>`;
+    }
+  });
+
+  closeHistoryBtn.addEventListener("click", () => {
+    historyModal.classList.add("hidden");
   });
 
   // Load Initial Config

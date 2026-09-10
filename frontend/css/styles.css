@@ -603,6 +603,97 @@ body {
   padding: 24px;
 }
 
+.history-modal-content {
+  width: 620px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-subtext {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.history-list-container {
+  overflow-y: auto;
+  max-height: 55vh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: hsl(222, 35%, 18%);
+  transform: translateY(-2px);
+}
+
+.history-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-title {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-action-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.history-action-badge.BUY {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--accent-green);
+}
+
+.history-action-badge.SELL {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--accent-red);
+}
+
+.history-verdict {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.history-card-right {
+  text-align: right;
+}
+
+.history-score {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-orange);
+}
+
+.history-date {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;

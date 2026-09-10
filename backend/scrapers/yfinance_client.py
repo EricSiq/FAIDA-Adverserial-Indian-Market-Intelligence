@@ -26,8 +26,8 @@ class YFinanceClient:
             day_change = current_price - prev_close if current_price and prev_close else 0.0
             day_change_pct = (day_change / prev_close * 100.0) if prev_close else 0.0
 
-            # 2. Historical data for technical indicators (6 months)
-            hist = ticker.history(period="6mo")
+            # 2. Historical data for technical indicators (1 year to ensure >= 200 trading days)
+            hist = ticker.history(period="1y")
             ema_20, ema_50, ema_200, rsi_14 = None, None, None, None
 
             if not hist.empty and len(hist) >= 14:
