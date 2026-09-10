@@ -1,0 +1,1 @@
+# FAIDA-Adverserial-Indian-Market-Intelligence
