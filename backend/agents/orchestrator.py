@@ -4,6 +4,7 @@ import time
 from backend.agents.parser_agent import ParserAgent
 from backend.agents.debater_agent import DebaterAgent
 from backend.agents.educator_agent import EducatorAgent
+from backend.agents.bias_agent import BiasAgent
 from backend.lkb.builder import LKBBuilder
 from backend.db.journal import DecisionJournal
 
@@ -26,8 +27,11 @@ class SwarmOrchestrator:
         # Step 3: Mount Adversarial Red-Team Counter-Thesis
         adversarial_text = DebaterAgent.argue(thesis, lkb_packet)
 
-        # Step 4: Synthesize Grounded Pre-Mortem Report & Calculate Friction Score
-        pre_mortem = EducatorAgent.synthesize(thesis, lkb_packet, adversarial_text)
+        # Step 4: Detect Cognitive Biases in User Rationale
+        detected_biases = BiasAgent.analyze_rationale(thesis.user_rationale)
+
+        # Step 5: Synthesize Grounded Pre-Mortem Report & Calculate Friction Score
+        pre_mortem = EducatorAgent.synthesize(thesis, lkb_packet, adversarial_text, biases=detected_biases)
 
         # Extract current market price for journal
         current_price = None

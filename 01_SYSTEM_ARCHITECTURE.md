@@ -187,3 +187,29 @@ FAIDA is engineered strictly as an **Adversarial Red-Team & Educational Invalida
 * **Phase 1 (Current Core)**: **NSE & BSE Equities** (Large-cap, Mid-cap, Small-cap). Real-time quotes, delivery volume spikes, Screener.in balance sheet forensics, and 6-level red-teaming.
 * **Phase 2 (Immediate Follow-up)**: **Indian Government Bonds & SGBs** (CCIL 10Y G-Sec yield curve, duration risk, tax-bracket trade-offs) and **MCX Commodities** (Gold/Silver hedge ratios, Crude Oil impact on sector margins).
 
+---
+
+## 10. Advanced Intelligence & Behavioral Protection Layer
+
+1. **Cognitive Bias & Behavioral Traps Detector (`BiasAgent`)**:
+   * Scans user natural language rationales for psychological vulnerabilities: *Anchoring Bias* (anchoring to 52-week peaks), *Loss Aversion / Sunk Cost* ("holding until breakeven"), *FOMO & Recency Bias* ("gained 20% in 3 days"), and *Lottery Ticket Fallacy* (loss-making penny stocks).
+   * Automatically modifies the Adversarial Friction Score and injects actionable cognitive reframing advice.
+2. **India VIX Macro Weather Gauge (`MacroClient`)**:
+   * Live volatility tracker mapping market regimes: Low Volatility/Complacency (<13), Normal (13–18), Elevated Volatility (18–24), and Extreme Panic (>24).
+3. **Interactive Scenario Stress Tester (`SimulatorAgent`)**:
+   * Real-time "What-If?" simulator modeling sudden shocks: Crude Oil spiking to $95+, RBI hiking repo rates by 25 bps, USD/INR depreciating past ₹86.50, and raw material EBITDA margin compression.
+4. **Exportable Pre-Mortem One-Pager**:
+   * Generates a printable, institutional-grade audit one-pager with an execution checklist and signature line for personal trade journals.
+
+---
+
+## 11. Future Scaling Architecture: Portfolio Bulk Audit
+
+*(Planned for Phase 2 scaling)*
+
+* **Consolidated Account Statement (CAS) & Broker CSV Ingestion**:
+  * Allows investors to upload portfolio exports from Zerodha Kite, Groww, Upstox, or CAMS/KFintech CAS statements.
+* **Portfolio-Wide Red-Team Audit**:
+  * Identifies hidden systemic correlations (e.g. 60% portfolio exposure to interest-rate sensitive cyclicals).
+  * Flags portfolio constituents with deteriorating promoter pledge ratios (>10%) or consecutive quarters of institutional distribution.
+

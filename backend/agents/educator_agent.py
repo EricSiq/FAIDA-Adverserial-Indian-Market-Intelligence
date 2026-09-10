@@ -12,9 +12,10 @@ class EducatorAgent:
     """Calculates the Adversarial Friction Score (AFS) and compiles the structured Pre-Mortem Report."""
 
     @classmethod
-    def synthesize(cls, thesis: UserThesis, lkb: LKBPacket, counter_thesis_text: str) -> PreMortemReport:
+    def synthesize(cls, thesis: UserThesis, lkb: LKBPacket, counter_thesis_text: str, biases: List[Any] = None) -> PreMortemReport:
         # 1. Deterministic Calculation of Adversarial Friction Score (AFS: 0 - 100)
         score = 50  # baseline neutral risk
+        bias_items = biases or []
 
         price = 0.0
         rsi = 50.0
@@ -45,6 +46,14 @@ class EducatorAgent:
             if rsi < 30: score += 25  # Selling at panic bottom
             elif rsi > 65: score -= 15 # Prudent profit booking
             if pledge == 0: score += 5 # Selling a clean governance company
+
+        # Apply friction modifiers from detected cognitive biases
+        for b in bias_items:
+            severity = getattr(b, "severity", "MEDIUM")
+            if severity == "HIGH":
+                score += 10
+            elif severity == "MEDIUM":
+                score += 5
 
         # Clamp between 10 and 95
         friction_score = max(10, min(95, int(score)))
@@ -102,5 +111,6 @@ class EducatorAgent:
                 "take_profit_target": thesis.target_price or (round(price * 1.08, 2) if price else None)
             },
             educational_takeaways=educational_takeaways,
+            detected_biases=[b.model_dump() if hasattr(b, 'model_dump') else b for b in bias_items],
             lkb_packet=lkb
         )

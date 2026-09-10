@@ -33,3 +33,37 @@ def test_analyze_validation_empty_query():
 def test_analyze_validation_invalid_tone():
     resp = client.post("/api/analyze", json={"query": "Buying Reliance at 2900", "tone_level": 99})
     assert resp.status_code == 422
+
+def test_macro_vix_endpoint():
+    resp = client.get("/api/macro/vix")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "vix_value" in data
+    assert "regime" in data
+    assert "regime_label" in data
+    assert "description" in data
+    assert data["regime"] in [
+        "LOW_VOLATILITY",
+        "NORMAL",
+        "ELEVATED",
+        "EXTREME_PANIC"
+    ]
+
+def test_simulate_endpoint():
+    resp = client.post("/api/simulate", json={
+        "symbol": "ASIANPAINT",
+        "scenario_type": "CRUDE_SURGE"
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["symbol"] == "ASIANPAINT"
+    assert data["scenario_id"] == "CRUDE_SURGE"
+    assert "estimated_impact" in data
+    assert "mechanism" in data
+    assert "red_team_warning" in data
+
+
+def test_export_endpoint_not_found():
+    resp = client.get("/api/export/non_existent_session_id")
+    assert resp.status_code == 404
+

@@ -140,6 +140,25 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch((err) => console.log("Config load error:", err));
 
+  // Load India VIX Weather Indicator
+  function loadVixGauge() {
+    fetch("/api/macro/vix")
+      .then((r) => r.json())
+      .then((vix) => {
+        const dot = document.getElementById("vix-dot");
+        const label = document.getElementById("vix-label");
+        const pill = document.getElementById("vix-pill");
+        if (dot && label && pill) {
+          dot.style.backgroundColor = vix.color;
+          dot.style.boxShadow = `0 0 6px ${vix.color}`;
+          label.textContent = `India VIX: ${vix.vix_value}`;
+          pill.title = `${vix.regime_label}: ${vix.description}`;
+        }
+      })
+      .catch((err) => console.log("VIX load error:", err));
+  }
+  loadVixGauge();
+
   saveSettingsBtn.addEventListener("click", async () => {
     const active_provider = settingProviderSelect.value;
     const default_local_model = settingOllamaModel.value.trim();
@@ -246,6 +265,43 @@ document.addEventListener("DOMContentLoaded", () => {
       return `<span class="citation-badge" data-fact-id="${id}">[${id}]</span>`;
     });
 
+    // Cognitive Biases HTML
+    let biasesHtml = "";
+    if (pm.detected_biases && pm.detected_biases.length > 0) {
+      biasesHtml = `
+        <div class="bias-section">
+          <h4>⚠️ Cognitive Biases & Behavioral Traps Detected in Your Rationale:</h4>
+          ${pm.detected_biases.map(b => `
+            <div class="bias-card">
+              <div class="bias-title">${escapeHtml(b.bias_name)} (${escapeHtml(b.severity)} Severity)</div>
+              <p class="bias-trap"><strong>The Trap:</strong> ${escapeHtml(b.psychological_trap)}</p>
+              <p class="bias-reframing"><strong>💡 Reframing Check:</strong> ${escapeHtml(b.reframing_advice)}</p>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    // Macro Shock Simulator HTML
+    const simulatorHtml = `
+      <div class="simulator-card" id="sim-card-${data.session_id}">
+        <div class="simulator-header">
+          <span>⚡ Interactive Macro Shock Simulator ("What-If?" Stress Tester)</span>
+        </div>
+        <div class="sim-buttons">
+          <button class="sim-btn" data-scenario="CRUDE_SURGE" data-sym="${escapeHtml(data.thesis.symbol)}">🛢️ Crude Spikes $95+</button>
+          <button class="sim-btn" data-scenario="RBI_RATE_HIKE" data-sym="${escapeHtml(data.thesis.symbol)}">🏦 RBI Hikes Repo +25bps</button>
+          <button class="sim-btn" data-scenario="INR_DEPRECIATION" data-sym="${escapeHtml(data.thesis.symbol)}">💵 USD/INR Weakens ₹86.50</button>
+          <button class="sim-btn" data-scenario="MARGIN_COMPRESSION" data-sym="${escapeHtml(data.thesis.symbol)}">📉 Margins Drop -250bps</button>
+        </div>
+        <div class="sim-result-panel hidden" id="sim-result-${data.session_id}">
+          <div class="sim-impact-tag" id="sim-impact-${data.session_id}"></div>
+          <div id="sim-mech-${data.session_id}" style="color:var(--text-secondary);"></div>
+          <div id="sim-warning-${data.session_id}" style="color:var(--accent-orange); font-size:11.5px;"></div>
+        </div>
+      </div>
+    `;
+
     const cardHtml = `
       <div class="adversarial-card">
         <div class="verdict-header">
@@ -259,11 +315,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div class="adversarial-body">${formattedDebate}</div>
 
+        ${biasesHtml}
+
+        ${simulatorHtml}
+
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
           <strong style="font-size: 12px; color: var(--text-primary);">💡 Retail Investor Pre-Mortem Takeaways:</strong>
           <ul style="margin: 6px 0 0 18px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
             ${pm.educational_takeaways.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
           </ul>
+        </div>
+
+        <div class="action-buttons-row">
+          <button class="export-btn" onclick="window.open('/api/export/${data.session_id}', '_blank')">
+            <span>📄 Export Pre-Mortem One-Pager (Print/PDF)</span>
+          </button>
         </div>
       </div>
     `;
@@ -272,11 +338,44 @@ document.addEventListener("DOMContentLoaded", () => {
     chatStream.appendChild(container);
     chatStream.scrollTop = chatStream.scrollHeight;
 
-    // Attach click handlers to new citation badges
+    // Attach click handlers to citation badges
     container.querySelectorAll(".citation-badge").forEach((badge) => {
       badge.addEventListener("click", () => {
         const factId = badge.dataset.factId;
         highlightFactRow(factId);
+      });
+    });
+
+    // Attach click handlers to simulator scenario buttons
+    container.querySelectorAll(".sim-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        container.querySelectorAll(".sim-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const scenario = btn.dataset.scenario;
+        const sym = btn.dataset.sym;
+        const resPanel = document.getElementById(`sim-result-${data.session_id}`);
+        const impactTag = document.getElementById(`sim-impact-${data.session_id}`);
+        const mechText = document.getElementById(`sim-mech-${data.session_id}`);
+        const warnText = document.getElementById(`sim-warning-${data.session_id}`);
+
+        resPanel.classList.remove("hidden");
+        impactTag.textContent = "Calculating macroeconomic shock impact...";
+        mechText.textContent = "";
+        warnText.textContent = "";
+
+        try {
+          const sRes = await fetch("/api/simulate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ symbol: sym, scenario_type: scenario })
+          });
+          const sData = await sRes.json();
+          impactTag.textContent = `${sData.scenario_title} → ${sData.estimated_impact}`;
+          mechText.textContent = sData.mechanism;
+          warnText.textContent = `⚠️ Red-Team Warning: ${sData.red_team_warning}`;
+        } catch (sErr) {
+          impactTag.textContent = "Simulation error: " + sErr.message;
+        }
       });
     });
   }

@@ -76,5 +76,6 @@ class PreMortemReport(BaseModel):
     blind_spots: List[str] = []
     invalidation_levels: Dict[str, Any] = {}
     educational_takeaways: List[str] = []
+    detected_biases: List[Dict[str, Any]] = []
     lkb_packet: Optional[LKBPacket] = None
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
