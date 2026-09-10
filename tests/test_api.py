@@ -114,10 +114,23 @@ def test_export_endpoint_success_and_escaping():
         }
     )
 
-    resp = client.get("/api/export/test-session-xss-clean")
-    assert resp.status_code == 200
-    assert "text/html" in resp.headers["content-type"]
-    html_text = resp.text
+    # 1. Test Default Native PDF Export
+    resp_pdf = client.get("/api/export/test-session-xss-clean")
+    assert resp_pdf.status_code == 200
+    assert "application/pdf" in resp_pdf.headers["content-type"]
+    assert resp_pdf.content.startswith(b"%PDF")
+
+    # 2. Test Direct /pdf Route
+    resp_pdf_direct = client.get("/api/export/test-session-xss-clean/pdf")
+    assert resp_pdf_direct.status_code == 200
+    assert "application/pdf" in resp_pdf_direct.headers["content-type"]
+    assert resp_pdf_direct.content.startswith(b"%PDF")
+
+    # 3. Test HTML View & Security Escaping
+    resp_html = client.get("/api/export/test-session-xss-clean?format=html")
+    assert resp_html.status_code == 200
+    assert "text/html" in resp_html.headers["content-type"]
+    html_text = resp_html.text
 
     # Security check: ensure script tags and event handlers are properly escaped as HTML entities
     assert "<script>alert(1)</script>" not in html_text
@@ -126,7 +139,9 @@ def test_export_endpoint_success_and_escaping():
     assert "&lt;img src=x onerror=alert(2)&gt;" in html_text
     assert "<b onmouseover=alert(3)>" not in html_text
     assert "&lt;b onmouseover=alert(3)&gt;P/E&lt;/b&gt;" in html_text
-    assert "Mandatory Pre-Trade Invalidation Checklist" in html_text
+    # Explainability check: ensure references table exists
+    assert "Grounded Evidence Sources &amp; Scraped Verification Links" in html_text or "Grounded Evidence Sources" in html_text
+
 
 
 

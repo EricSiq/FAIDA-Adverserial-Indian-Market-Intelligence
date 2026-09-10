@@ -320,19 +320,23 @@ document.addEventListener("DOMContentLoaded", () => {
         ${simulatorHtml}
 
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
-          <strong style="font-size: 12px; color: var(--text-primary);">💡 Retail Investor Pre-Mortem Takeaways:</strong>
+          <strong style="font-size: 12px; color: var(--text-primary);">Key Institutional Pre-Mortem Takeaways:</strong>
           <ul style="margin: 6px 0 0 18px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
             ${pm.educational_takeaways.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
           </ul>
         </div>
 
         <div class="action-buttons-row">
-          <button class="export-btn" onclick="window.open('/api/export/${data.session_id}', '_blank')">
-            <span>📄 Export Pre-Mortem One-Pager (Print/PDF)</span>
+          <button class="export-btn" onclick="window.open('/api/export/${data.session_id}?format=pdf', '_blank')">
+            <span>Download Pre-Mortem One-Pager (PDF)</span>
+          </button>
+          <button class="export-btn secondary-btn" style="background:transparent; border:1px solid var(--border-subtle); color:var(--text-secondary); margin-left:8px;" onclick="window.open('/api/export/${data.session_id}?format=html', '_blank')">
+            <span>View Web Layout</span>
           </button>
         </div>
       </div>
     `;
+
 
     container.innerHTML = cardHtml;
     chatStream.appendChild(container);
