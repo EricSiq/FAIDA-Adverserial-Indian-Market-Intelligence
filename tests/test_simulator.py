@@ -16,3 +16,16 @@ def test_inr_depreciation_simulation():
     res = SimulatorAgent.simulate("INFY", "INR_DEPRECIATION")
     assert res.symbol == "INFY"
     assert "TAILWIND" in res.estimated_impact or "FAVORABLE" in res.estimated_impact
+
+def test_margin_compression_simulation():
+    res = SimulatorAgent.simulate("RELIANCE", "MARGIN_COMPRESSION")
+    assert res.symbol == "RELIANCE"
+    assert "NEGATIVE" in res.estimated_impact
+
+def test_simulator_symbol_cleaning_and_fallbacks():
+    res_ns = SimulatorAgent.simulate("TCS.NS", "INR_DEPRECIATION")
+    assert res_ns.symbol == "TCS"
+
+    res_none = SimulatorAgent.simulate(None, "CRUDE_SURGE")
+    assert res_none.symbol == "BENCHMARK"
+

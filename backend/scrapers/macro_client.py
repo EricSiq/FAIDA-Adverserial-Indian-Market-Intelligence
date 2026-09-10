@@ -1,6 +1,7 @@
 import yfinance as yf
 from typing import Dict, Any
 import logging
+import math
 
 logger = logging.getLogger("faida.scrapers.macro")
 
@@ -12,13 +13,22 @@ class MacroClient:
         try:
             ticker = yf.Ticker("^INDIAVIX")
             hist = ticker.history(period="5d")
-            if not hist.empty:
-                current_vix = round(float(hist["Close"].iloc[-1]), 2)
-                prev_vix = round(float(hist["Close"].iloc[-2]), 2) if len(hist) >= 2 else current_vix
-                vix_change = round(current_vix - prev_vix, 2)
-                vix_change_pct = round((vix_change / prev_vix * 100.0), 2) if prev_vix else 0.0
+            if not hist.empty and "Close" in hist.columns:
+                valid_closes = hist["Close"].dropna()
+                if len(valid_closes) > 0:
+                    current_vix = round(float(valid_closes.iloc[-1]), 2)
+                    prev_vix = round(float(valid_closes.iloc[-2]), 2) if len(valid_closes) >= 2 else current_vix
+                    if math.isnan(current_vix) or current_vix <= 0:
+                        current_vix = 13.5
+                    if math.isnan(prev_vix) or prev_vix <= 0:
+                        prev_vix = current_vix
+                    vix_change = round(current_vix - prev_vix, 2)
+                    vix_change_pct = round((vix_change / prev_vix * 100.0), 2) if prev_vix else 0.0
+                else:
+                    current_vix, prev_vix, vix_change, vix_change_pct = 13.5, 13.5, 0.0, 0.0
             else:
                 current_vix, prev_vix, vix_change, vix_change_pct = 13.5, 13.5, 0.0, 0.0
+
 
             # Regime Classification
             if current_vix < 13.0:

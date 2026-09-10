@@ -64,6 +64,9 @@ class BiasAgent:
 
     @classmethod
     def analyze_rationale(cls, text: str) -> List[DetectedBias]:
+        if not text or not isinstance(text, str):
+            return []
+
         detected = []
         lower_text = text.lower()
 

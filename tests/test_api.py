@@ -62,8 +62,71 @@ def test_simulate_endpoint():
     assert "mechanism" in data
     assert "red_team_warning" in data
 
+def test_simulate_endpoint_invalid_scenario():
+    resp = client.post("/api/simulate", json={
+        "symbol": "ASIANPAINT",
+        "scenario_type": "INVALID_SCENARIO"
+    })
+    assert resp.status_code == 422
+
+def test_simulate_endpoint_invalid_symbol_regex():
+    resp = client.post("/api/simulate", json={
+        "symbol": "ASIAN; DROP TABLE",
+        "scenario_type": "CRUDE_SURGE"
+    })
+    assert resp.status_code == 422
 
 def test_export_endpoint_not_found():
     resp = client.get("/api/export/non_existent_session_id")
     assert resp.status_code == 404
+
+def test_export_endpoint_invalid_session_format():
+    resp = client.get("/api/export/bad;id<script>")
+    assert resp.status_code == 400
+
+def test_export_endpoint_success_and_escaping():
+    from backend.app import journal
+
+    journal.save_decision(
+        session_id="test-session-xss-clean",
+        symbol="<script>alert(1)</script>",
+        exchange="NSE",
+        action="BUY",
+        target_price=500.0,
+        current_price=480.0,
+        friction_score=75,
+        tone_level=3,
+        headline_verdict="Alert <img src=x onerror=alert(2)>",
+        pre_mortem_dict={
+            "headline_verdict": "Alert <img src=x onerror=alert(2)>",
+            "friction_score": 75,
+            "bearish_risks": [{"risk_title": "Risk 1", "severity": "HIGH", "metric_cited": "PE", "argument": "Overvalued"}],
+            "educational_takeaways": ["Be disciplined"],
+            "invalidation_levels": {"invalidation_price": 450.0, "take_profit_target": 550.0}
+        },
+        lkb_packet_dict={
+            "symbol": "TEST",
+            "exchange": "NSE",
+            "current_price": 480.0,
+            "facts": [
+                {"id": "LKB-01", "category": "VALUATION", "metric": "<b onmouseover=alert(3)>P/E</b>", "value": "35.4", "unit": "x", "source": "Screener"}
+            ]
+        }
+    )
+
+    resp = client.get("/api/export/test-session-xss-clean")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+    html_text = resp.text
+
+    # Security check: ensure script tags and event handlers are properly escaped as HTML entities
+    assert "<script>alert(1)</script>" not in html_text
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html_text.lower()
+    assert "<img src=x onerror=alert(2)>" not in html_text
+    assert "&lt;img src=x onerror=alert(2)&gt;" in html_text
+    assert "<b onmouseover=alert(3)>" not in html_text
+    assert "&lt;b onmouseover=alert(3)&gt;P/E&lt;/b&gt;" in html_text
+    assert "Mandatory Pre-Trade Invalidation Checklist" in html_text
+
+
 

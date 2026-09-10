@@ -29,8 +29,12 @@ class SimulatorAgent:
 
     @classmethod
     def simulate(cls, symbol: str, scenario_type: str) -> ScenarioResult:
-        sym = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+        if not symbol or not isinstance(symbol, str):
+            sym = "BENCHMARK"
+        else:
+            sym = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
         sec_info = cls.SECTOR_MAPPINGS.get(sym, {"sector": "GENERAL_EQUITY", "crude_sensitivity": "NEGATIVE", "fx_sensitivity": "NEUTRAL"})
+
 
         if scenario_type == "CRUDE_SURGE":
             title = "Macro Shock: Brent Crude spikes to $95 - $100/bbl"

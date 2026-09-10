@@ -1,4 +1,6 @@
 import os
+import re
+import html
 from pathlib import Path
 from typing import Optional, Dict, Any
 from fastapi import FastAPI, HTTPException
@@ -51,8 +53,8 @@ def analyze_thesis(req: AnalyzeRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 class SimulateRequest(BaseModel):
-    symbol: str = Field(..., min_length=1, max_length=20)
-    scenario_type: str = Field(..., description="CRUDE_SURGE, RBI_RATE_HIKE, INR_DEPRECIATION, MARGIN_COMPRESSION")
+    symbol: str = Field(..., min_length=1, max_length=20, pattern=r"^[A-Za-z0-9&._-]+$")
+    scenario_type: str = Field(..., pattern=r"^(CRUDE_SURGE|RBI_RATE_HIKE|INR_DEPRECIATION|MARGIN_COMPRESSION)$")
 
 @app.get("/api/macro/vix")
 def get_vix_gauge():
@@ -74,6 +76,8 @@ def get_history(limit: int = 20):
 
 @app.get("/api/history/{session_id}")
 def get_decision_details(session_id: str):
+    if not re.match(r"^[a-zA-Z0-9_\-]+$", session_id):
+        raise HTTPException(status_code=400, detail="Invalid session_id format")
     res = journal.get_decision_by_id(session_id)
     if not res:
         raise HTTPException(status_code=404, detail="Decision record not found")
@@ -82,6 +86,9 @@ def get_decision_details(session_id: str):
 @app.get("/api/export/{session_id}")
 def export_pre_mortem_one_pager(session_id: str):
     """Generates an institutional-grade, printable HTML Pre-Mortem One-Pager."""
+    if not re.match(r"^[a-zA-Z0-9_\-]+$", session_id):
+        raise HTTPException(status_code=400, detail="Invalid session_id format")
+
     record = journal.get_decision_by_id(session_id)
     if not record:
         raise HTTPException(status_code=404, detail="Record not found")
@@ -92,20 +99,32 @@ def export_pre_mortem_one_pager(session_id: str):
     biases = pm.get("detected_biases", [])
 
     facts_rows = "".join([
-        f"<tr><td><code>{f.get('id')}</code></td><td>{f.get('category')}</td><td><strong>{f.get('metric')}</strong></td><td>{f.get('value')} {f.get('unit', '')}</td><td>{f.get('source')}</td></tr>"
+        f"<tr><td><code>{html.escape(str(f.get('id', '')))}</code></td><td>{html.escape(str(f.get('category', '')))}</td><td><strong>{html.escape(str(f.get('metric', '')))}</strong></td><td>{html.escape(str(f.get('value', '')))} {html.escape(str(f.get('unit', '')))}</td><td>{html.escape(str(f.get('source', '')))}</td></tr>"
         for f in facts
     ])
 
     biases_html = "".join([
-        f"<div class='bias-box'><strong>⚠️ {b.get('bias_name')} ({b.get('severity')} Severity)</strong><p><em>Trap:</em> {b.get('psychological_trap')}</p><p><em>Reframing:</em> {b.get('reframing_advice')}</p></div>"
+        f"<div class='bias-box'><strong>⚠️ {html.escape(str(b.get('bias_name', '')))} ({html.escape(str(b.get('severity', '')))} Severity)</strong><p><em>Trap:</em> {html.escape(str(b.get('psychological_trap', '')))}</p><p><em>Reframing:</em> {html.escape(str(b.get('reframing_advice', '')))}</p></div>"
         for b in biases
     ]) if biases else "<p>No prominent cognitive biases detected in user rationale.</p>"
+
+    esc_symbol = html.escape(str(record.get('symbol', 'UNKNOWN')))
+    esc_exchange = html.escape(str(record.get('exchange', 'NSE')))
+    esc_action = html.escape(str(record.get('action', 'BUY')))
+    esc_target = html.escape(str(record.get('target_price') or 'Market'))
+    esc_cmp = html.escape(str(record.get('current_price') or 'N/A'))
+    esc_verdict = html.escape(str(pm.get('headline_verdict', 'Pre-Mortem Invalidation Report')))
+    esc_date = html.escape(str(record.get('created_at', '')))
+    esc_friction = html.escape(str(record.get('friction_score', '50')))
+    esc_session = html.escape(str(session_id))
+    esc_invalidation = html.escape(str(pm.get('invalidation_levels', {}).get('invalidation_price', 'N/A')))
+    esc_take_profit = html.escape(str(pm.get('invalidation_levels', {}).get('take_profit_target', 'N/A')))
 
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>FAIDA Pre-Mortem Audit - {record.get('symbol')}</title>
+<title>FAIDA Pre-Mortem Audit - {esc_symbol}</title>
 <style>
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; color: #111; max-width: 850px; margin: 40px auto; padding: 20px; }}
   .header {{ display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 20px; }}
@@ -133,19 +152,19 @@ def export_pre_mortem_one_pager(session_id: str):
       <div class="meta">Red-Team Invalidation Report | Indian Capital Markets</div>
     </div>
     <div style="text-align: right;">
-      <strong>{record.get('symbol')} ({record.get('exchange', 'NSE')})</strong><br>
-      <span>Proposed Action: <strong>{record.get('action')}</strong></span><br>
-      <span>Target: ₹{record.get('target_price') or 'Market'} | CMP: ₹{record.get('current_price') or 'N/A'}</span>
+      <strong>{esc_symbol} ({esc_exchange})</strong><br>
+      <span>Proposed Action: <strong>{esc_action}</strong></span><br>
+      <span>Target: ₹{esc_target} | CMP: ₹{esc_cmp}</span>
     </div>
   </div>
 
   <div class="verdict-box">
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <div>
-        <h3 style="margin: 0 0 5px 0;">{pm.get('headline_verdict', 'Pre-Mortem Verdict')}</h3>
-        <p style="margin: 0; font-size: 13px; color: #444;">Session: {session_id} | Date: {record.get('created_at')}</p>
+        <h3 style="margin: 0 0 5px 0;">{esc_verdict}</h3>
+        <p style="margin: 0; font-size: 13px; color: #444;">Session: {esc_session} | Date: {esc_date}</p>
       </div>
-      <div class="score">{record.get('friction_score')}/100</div>
+      <div class="score">{esc_friction}/100</div>
     </div>
   </div>
 
@@ -160,8 +179,8 @@ def export_pre_mortem_one_pager(session_id: str):
 
   <h3>3. Invalidation & Stop-Loss Rules</h3>
   <ul>
-    <li><strong>Stop-Loss Invalidation Level:</strong> ₹{pm.get('invalidation_levels', {}).get('invalidation_price', 'N/A')} (Exit discipline to avoid asymmetric drawdown).</li>
-    <li><strong>Target Invalidation Resistance:</strong> ₹{pm.get('invalidation_levels', {}).get('take_profit_target', 'N/A')}</li>
+    <li><strong>Stop-Loss Invalidation Level:</strong> ₹{esc_invalidation} (Exit discipline to avoid asymmetric drawdown).</li>
+    <li><strong>Target Invalidation Resistance:</strong> ₹{esc_take_profit}</li>
   </ul>
 
   <div class="checklist">
@@ -182,6 +201,7 @@ def export_pre_mortem_one_pager(session_id: str):
 </body>
 </html>"""
     return HTMLResponse(content=html_content)
+
 
 @app.get("/api/config")
 def get_config():
