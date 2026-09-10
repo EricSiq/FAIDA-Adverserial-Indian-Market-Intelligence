@@ -20,7 +20,7 @@ class Settings(BaseModel):
     # LLM Settings
     # Primary local model is gemma4:e4b in Ollama
     DEFAULT_LOCAL_MODEL: str = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
     
     # Cloud Fallback (Groq API or Gemini)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")

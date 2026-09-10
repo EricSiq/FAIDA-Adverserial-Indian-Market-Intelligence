@@ -35,8 +35,14 @@ call .venv\Scripts\activate.bat
 
 :: 4. Check/Install dependencies
 echo [*] Checking and updating dependencies...
-python -m pip install --quiet --upgrade pip
-pip install --quiet -r requirements.txt
+where uv >nul 2>nul
+if %errorlevel% equ 0 (
+    echo [*] Detected uv, installing lightning fast...
+    uv pip install -q -r requirements.txt --python .venv\Scripts\python.exe
+) else (
+    python -m pip install --quiet --upgrade pip
+    pip install --quiet -r requirements.txt
+)
 if %errorlevel% neq 0 (
     echo [ERROR] Dependency installation failed. Check your internet connection.
     pause
@@ -45,9 +51,9 @@ if %errorlevel% neq 0 (
 
 :: 5. Check local Ollama status
 echo [*] Checking local Ollama service...
-curl -s http://localhost:11434/api/tags >nul 2>nul
+curl -s http://127.0.0.1:11434/api/tags >nul 2>nul
 if %errorlevel% neq 0 (
-    echo [NOTE] Ollama service not detected on localhost:11434.
+    echo [NOTE] Ollama service not detected on 127.0.0.1:11434.
     echo If you wish to use local inference, please start Ollama ('ollama serve').
     echo You can also use cloud inference via Groq API.
 ) else (

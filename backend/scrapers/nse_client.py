@@ -17,9 +17,8 @@ class NSEClient:
     }
 
     def __init__(self):
-        self.session = httpx.Client(headers=self.HEADERS, timeout=10.0, follow_redirects=True)
+        self.session = httpx.Client(headers=self.HEADERS, timeout=3.5, follow_redirects=True)
         self.last_handshake = 0.0
-        self._ensure_cookies()
 
     def _ensure_cookies(self):
         """Refresh cookie jar every 10 minutes or on first call."""
