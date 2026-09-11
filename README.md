@@ -4,7 +4,7 @@
 [![Stack](https://img.shields.io/badge/Stack-Python%203.11%20%7C%20FastAPI%20%7C%20PyWebView-orange)](#)
 [![LLM](https://img.shields.io/badge/LLM-Local%20Ollama%20(gemma4:e4b)%20%7C%20Groq%20Cloud%20API-green)](#)
 [![Data](https://img.shields.io/badge/Data%20Sources-NSE%20%7C%20Screener.in%20%7C%20CCIL%20%7C%20MCX-purple)](#)
-[![Tests](https://img.shields.io/badge/Tests-49%2F49%20Passing%20(pytest)-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/Tests-50%2F50%20Passing%20(pytest)-brightgreen)](#)
 
 > **FAIDA** (*फ़ायदा* — "Benefit / Profit"): An offline-capable, lightweight desktop application hosting an adversarial swarm of AI agents designed to act as an uncompromising **Red Team / Devil's Advocate** for retail investment decisions in the Indian capital markets (Equities, Bonds, Commodities).
 
@@ -144,7 +144,7 @@ Run the full automated test suite covering all scrapers, models, parser, journal
 .venv\Scripts\pytest.exe -v
 ```
 
-**Status:** 49 / 49 passed (100% test coverage across all subsystems).
+**Status:** 50 / 50 passed (100% test coverage across all subsystems).
 
 ---
 

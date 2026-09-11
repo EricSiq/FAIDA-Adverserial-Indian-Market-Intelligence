@@ -156,3 +156,12 @@ def test_cache_clear_expired_endpoint():
     data = resp.json()
     assert data["status"] == "ok"
     assert "purged_count" in data
+
+def test_static_frontend_index():
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "FAIDA" in resp.text
+    assert "macro-ribbon" in resp.text
+    assert "new-thesis-btn" in resp.text
+    assert "filter-chip" in resp.text
+

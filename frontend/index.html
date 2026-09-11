@@ -51,11 +51,44 @@
           <span class="status-dot online"></span>
           <span id="provider-label">Ollama: gemma4:e4b</span>
         </button>
+        <button id="new-thesis-btn" class="pill-btn secondary" title="Clear Workspace & Start New Thesis (Ctrl+N)">
+          <span>✨ New Thesis</span>
+        </button>
         <button id="history-btn" class="pill-btn secondary" title="View Past Decisions Journal">
           <span>📜 Journal</span>
         </button>
       </div>
     </header>
+
+    <!-- Global Macro Telemetry Ribbon (FRED, India VIX & CCIL) -->
+    <div class="macro-ribbon" id="macro-ribbon">
+      <div class="macro-ribbon-inner">
+        <div class="macro-item" title="Brent Crude Oil Spot (USD / Barrel via FRED)">
+          <span class="macro-label">🛢️ BRENT CRUDE:</span>
+          <span class="macro-val" id="macro-brent">--</span>
+        </div>
+        <div class="macro-divider"></div>
+        <div class="macro-item" title="US 10-Year Treasury Constant Maturity Yield via FRED">
+          <span class="macro-label">🇺🇸 US 10Y:</span>
+          <span class="macro-val" id="macro-us10y">--</span>
+        </div>
+        <div class="macro-divider"></div>
+        <div class="macro-item" title="Broad US Dollar Index (DXY) via FRED">
+          <span class="macro-label">💵 DXY:</span>
+          <span class="macro-val" id="macro-dxy">--</span>
+        </div>
+        <div class="macro-divider"></div>
+        <div class="macro-item" title="India VIX Volatility Weather Gauge">
+          <span class="macro-label">🇮🇳 INDIA VIX:</span>
+          <span class="macro-val" id="macro-vix">--</span>
+        </div>
+        <div class="macro-divider"></div>
+        <div class="macro-item" title="India 10-Year Sovereign Benchmark G-Sec Yield">
+          <span class="macro-label">🏛️ G-SEC 10Y:</span>
+          <span class="macro-val" id="macro-gsec">7.08%</span>
+        </div>
+      </div>
+    </div>
 
     <!-- Main Workspace Split -->
     <main class="main-workspace">
@@ -88,7 +121,7 @@
             <input 
               type="text" 
               id="user-input" 
-              placeholder="e.g. 'Selling Reliance at ₹2900' or 'Buying HDFC Bank at ₹1620'..." 
+              placeholder="e.g. 'Selling Reliance at ₹2900' or 'Buying HDFC Bank at ₹1620' (Press Enter to submit)..." 
               autocomplete="off" 
               required
             />
@@ -120,6 +153,15 @@
             <div id="friction-progress" class="progress-bar-fill" style="width: 0%;"></div>
           </div>
           <p id="friction-desc" class="gauge-subtext">Awaiting investment hypothesis to measure market headwinds...</p>
+        </div>
+
+        <!-- LKB Category Filter Chips -->
+        <div class="lkb-filter-row" id="lkb-filter-row">
+          <button class="filter-chip active" data-category="ALL">All Facts (<span id="count-all">0</span>)</button>
+          <button class="filter-chip" data-category="TECHNICAL">Technical</button>
+          <button class="filter-chip" data-category="VALUATION">Valuation</button>
+          <button class="filter-chip" data-category="GOVERNANCE">Governance</button>
+          <button class="filter-chip" data-category="MACRO">Macro</button>
         </div>
 
         <!-- LKB Fact Table -->

@@ -15,6 +15,20 @@ def run_fastapi():
         access_log=False
     )
 
+import urllib.request
+
+def wait_for_server(url: str, timeout_sec: float = 6.0) -> bool:
+    """Polls server readiness endpoint with low-latency retries."""
+    start_time = time.time()
+    while (time.time() - start_time) < timeout_sec:
+        try:
+            with urllib.request.urlopen(f"{url}/api/config", timeout=0.3) as response:
+                if response.status == 200:
+                    return True
+        except Exception:
+            time.sleep(0.05)
+    return False
+
 def main():
     url = f"http://{settings.HOST}:{settings.PORT}"
     print(f"[*] Starting FAIDA (Financial Adversarial Indian Data Agents)...")
@@ -23,7 +37,10 @@ def main():
     # Start FastAPI server in background thread
     server_thread = threading.Thread(target=run_fastapi, daemon=True)
     server_thread.start()
-    time.sleep(1.2)  # Allow server to initialize
+
+    # Active health check instead of blind sleep
+    if not wait_for_server(url):
+        print(f"[!] Server readiness check timed out. Proceeding to launch...")
 
     # CLI mode check
     if "--cli" in sys.argv:
@@ -56,7 +73,7 @@ def main():
         except KeyboardInterrupt:
             sys.exit(0)
 
-    # Native Desktop Window via PyWebView
+    # Native Desktop Window via PyWebView (Zero-Flash dark navy background, text selectable)
     try:
         import webview
         print(f"[*] Launching native desktop window via PyWebView...")
@@ -65,7 +82,10 @@ def main():
             url=url,
             width=1320,
             height=880,
-            min_size=(900, 600)
+            min_size=(900, 600),
+            background_color="#0a0e17",
+            text_select=True,
+            zoomable=False
         )
         webview.start()
     except Exception as err:

@@ -8,12 +8,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSpinner = document.getElementById("btn-spinner");
   const chatStream = document.getElementById("chat-stream");
   const welcomeCard = document.getElementById("welcome-card");
+  const newThesisBtn = document.getElementById("new-thesis-btn");
 
   const lkbSymbolBadge = document.getElementById("lkb-symbol-badge");
   const frictionScoreVal = document.getElementById("friction-score-val");
   const frictionProgress = document.getElementById("friction-progress");
   const frictionDesc = document.getElementById("friction-desc");
   const lkbTbody = document.getElementById("lkb-tbody");
+  const countAll = document.getElementById("count-all");
   const evidenceBox = document.getElementById("evidence-box");
   const evidenceId = document.getElementById("evidence-id");
   const evidenceSource = document.getElementById("evidence-source");
@@ -36,6 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyList = document.getElementById("history-list");
 
   let currentLKBFacts = [];
+  let activeCategory = "ALL";
+  let activeStepperTimers = [];
 
   const TONE_NAMES = {
     1: "Level 1: Socratic Educator (Gentle & Beginner Analogies)",
@@ -98,6 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="history-date">${dateStr}</div>
           </div>
         `;
+
         card.addEventListener("click", async () => {
           try {
             const detailRes = await fetch(`/api/history/${item.id}`);
@@ -105,10 +110,16 @@ document.addEventListener("DOMContentLoaded", () => {
             historyModal.classList.add("hidden");
             if (welcomeCard) welcomeCard.style.display = "none";
             renderAnalysisResponse({
+              session_id: detail.session_id,
               adversarial_counter_thesis: detail.pre_mortem.headline_verdict + "\n\n" + (detail.pre_mortem.bearish_risks.map(r => `### ${r.risk_title}\n${r.argument}`).join("\n\n")),
               elapsed_seconds: 0.0,
               pre_mortem: detail.pre_mortem,
-              lkb_packet: detail.lkb_packet
+              lkb_packet: detail.lkb_packet,
+              thesis: {
+                symbol: detail.symbol,
+                exchange: detail.exchange,
+                action: detail.action
+              }
             });
             updateLKBPanel(detail.lkb_packet, detail.pre_mortem);
           } catch (err) {
@@ -140,24 +151,49 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch((err) => console.log("Config load error:", err));
 
-  // Load India VIX Weather Indicator
-  function loadVixGauge() {
-    fetch("/api/macro/vix")
-      .then((r) => r.json())
-      .then((vix) => {
+  // Load Global Macro Telemetry & India VIX
+  async function loadMacroTelemetry() {
+    try {
+      const [vixRes, macroRes] = await Promise.all([
+        fetch("/api/macro/vix").then(r => r.json()).catch(() => null),
+        fetch("/api/macro/global").then(r => r.json()).catch(() => null)
+      ]);
+
+      if (vixRes) {
         const dot = document.getElementById("vix-dot");
         const label = document.getElementById("vix-label");
         const pill = document.getElementById("vix-pill");
+        const macroVix = document.getElementById("macro-vix");
         if (dot && label && pill) {
-          dot.style.backgroundColor = vix.color;
-          dot.style.boxShadow = `0 0 6px ${vix.color}`;
-          label.textContent = `India VIX: ${vix.vix_value}`;
-          pill.title = `${vix.regime_label}: ${vix.description}`;
+          dot.style.backgroundColor = vixRes.color || "var(--accent-green)";
+          dot.style.boxShadow = `0 0 6px ${vixRes.color || "var(--accent-green)"}`;
+          label.textContent = `India VIX: ${vixRes.vix_value}`;
+          pill.title = `${vixRes.regime_label}: ${vixRes.description}`;
         }
-      })
-      .catch((err) => console.log("VIX load error:", err));
+        if (macroVix) {
+          macroVix.textContent = `${vixRes.vix_value} (${vixRes.regime_label || "Normal"})`;
+        }
+      }
+
+      if (macroRes) {
+        const brentEl = document.getElementById("macro-brent");
+        const us10yEl = document.getElementById("macro-us10y");
+        const dxyEl = document.getElementById("macro-dxy");
+        if (brentEl && macroRes.brent_crude_usd) {
+          brentEl.textContent = `$${macroRes.brent_crude_usd.toFixed(2)}`;
+        }
+        if (us10yEl && macroRes.us_10y_yield_pct) {
+          us10yEl.textContent = `${macroRes.us_10y_yield_pct.toFixed(2)}%`;
+        }
+        if (dxyEl && macroRes.us_dollar_index) {
+          dxyEl.textContent = `${macroRes.us_dollar_index.toFixed(1)}`;
+        }
+      }
+    } catch (err) {
+      console.log("Macro telemetry load error:", err);
+    }
   }
-  loadVixGauge();
+  loadMacroTelemetry();
 
   saveSettingsBtn.addEventListener("click", async () => {
     const active_provider = settingProviderSelect.value;
@@ -187,6 +223,60 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // LKB Category Filter Chips
+  document.querySelectorAll(".filter-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeCategory = (btn.dataset.category || "ALL").toUpperCase();
+      renderLKBTable();
+    });
+  });
+
+  // Reset / New Thesis Function
+  function resetWorkspace() {
+    chatStream.innerHTML = "";
+    if (welcomeCard) {
+      welcomeCard.style.display = "block";
+      chatStream.appendChild(welcomeCard);
+    }
+    currentLKBFacts = [];
+    lkbSymbolBadge.textContent = "NO ASSET SELECTED";
+    frictionScoreVal.textContent = "-- / 100";
+    frictionScoreVal.style.color = "var(--text-primary)";
+    frictionProgress.style.width = "0%";
+    frictionDesc.textContent = "Awaiting investment hypothesis to measure market headwinds...";
+    if (countAll) countAll.textContent = "0";
+    lkbTbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty-table-msg">
+          Submit an investment thesis to inspect real-time NSE & Screener facts.
+        </td>
+      </tr>
+    `;
+    evidenceId.textContent = "CITATION INSPECTOR";
+    evidenceSource.textContent = "--";
+    evidenceContext.textContent = "Click any [LKB-XX] citation badge in the debate to verify the mathematical ground-truth.";
+    userInput.value = "";
+    userInput.focus();
+  }
+
+  if (newThesisBtn) {
+    newThesisBtn.addEventListener("click", resetWorkspace);
+  }
+
+  // Keyboard Shortcuts
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      settingsModal.classList.add("hidden");
+      historyModal.classList.add("hidden");
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === "n") {
+      e.preventDefault();
+      resetWorkspace();
+    }
+  });
+
   // Submit Thesis Form
   thesisForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -199,7 +289,13 @@ document.addEventListener("DOMContentLoaded", () => {
     appendUserBubble(query);
     userInput.value = "";
 
-    // 2. Set Loading UI
+    // 2. Render Swarm Progress Stepper
+    const stepperCard = createSwarmStepper();
+    chatStream.appendChild(stepperCard);
+    chatStream.scrollTop = chatStream.scrollHeight;
+    startStepperAnimation();
+
+    // 3. Set Loading UI
     setLoading(true);
 
     try {
@@ -215,19 +311,95 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = await resp.json();
+      clearStepperTimers();
+      stepperCard.remove();
+
       renderAnalysisResponse(data);
       updateLKBPanel(data.lkb_packet, data.pre_mortem);
     } catch (err) {
+      clearStepperTimers();
+      stepperCard.remove();
       appendErrorBubble("Error stress-testing thesis: " + err.message);
     } finally {
       setLoading(false);
     }
   });
 
+  function createSwarmStepper() {
+    const card = document.createElement("div");
+    card.className = "swarm-stepper";
+    card.id = "active-stepper";
+    card.innerHTML = `
+      <div class="stepper-header">
+        <span>⚡ ADVERSARIAL SWARM TELEMETRY</span>
+        <span style="font-size: 11px; color: var(--accent-blue);">Live Market Ingestion Active</span>
+      </div>
+      <div class="stepper-steps-list">
+        <div class="stepper-step active" id="step-1">
+          <div class="step-icon">1</div>
+          <div class="step-label">Ingesting Live NSE Quotes & 52-Week Percentiles...</div>
+        </div>
+        <div class="stepper-step" id="step-2">
+          <div class="step-icon">2</div>
+          <div class="step-label">Auditing Screener.in 3-Year CFO/PAT Accrual Forensics...</div>
+        </div>
+        <div class="stepper-step" id="step-3">
+          <div class="step-icon">3</div>
+          <div class="step-label">Cross-referencing BSE Filings & Global Macro Drivers...</div>
+        </div>
+        <div class="stepper-step" id="step-4">
+          <div class="step-icon">4</div>
+          <div class="step-label">Activating Red-Team Adversarial Swarm...</div>
+        </div>
+      </div>
+    `;
+    return card;
+  }
+
+  function startStepperAnimation() {
+    clearStepperTimers();
+    const t1 = setTimeout(() => {
+      const s1 = document.getElementById("step-1");
+      const s2 = document.getElementById("step-2");
+      if (s1 && s2) {
+        s1.className = "stepper-step done";
+        s1.querySelector(".step-icon").textContent = "✓";
+        s2.className = "stepper-step active";
+      }
+    }, 450);
+
+    const t2 = setTimeout(() => {
+      const s2 = document.getElementById("step-2");
+      const s3 = document.getElementById("step-3");
+      if (s2 && s3) {
+        s2.className = "stepper-step done";
+        s2.querySelector(".step-icon").textContent = "✓";
+        s3.className = "stepper-step active";
+      }
+    }, 1100);
+
+    const t3 = setTimeout(() => {
+      const s3 = document.getElementById("step-3");
+      const s4 = document.getElementById("step-4");
+      if (s3 && s4) {
+        s3.className = "stepper-step done";
+        s3.querySelector(".step-icon").textContent = "✓";
+        s4.className = "stepper-step active";
+      }
+    }, 1900);
+
+    activeStepperTimers = [t1, t2, t3];
+  }
+
+  function clearStepperTimers() {
+    activeStepperTimers.forEach(t => clearTimeout(t));
+    activeStepperTimers = [];
+  }
+
   function setLoading(loading) {
     if (loading) {
       submitBtn.disabled = true;
-      btnText.textContent = "Scraping & Red-Teaming...";
+      btnText.textContent = "Swarm Ingesting...";
       btnSpinner.classList.remove("hidden");
     } else {
       submitBtn.disabled = false;
@@ -255,7 +427,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderAnalysisResponse(data) {
     const pm = data.pre_mortem;
-    const lkb = data.lkb_packet;
     const container = document.createElement("div");
     container.className = "analysis-turn";
 
@@ -283,16 +454,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Macro Shock Simulator HTML
+    const sym = data.thesis ? data.thesis.symbol : "EQUITY";
     const simulatorHtml = `
       <div class="simulator-card" id="sim-card-${data.session_id}">
         <div class="simulator-header">
           <span>⚡ Interactive Macro Shock Simulator ("What-If?" Stress Tester)</span>
         </div>
         <div class="sim-buttons">
-          <button class="sim-btn" data-scenario="CRUDE_SURGE" data-sym="${escapeHtml(data.thesis.symbol)}">🛢️ Crude Spikes $95+</button>
-          <button class="sim-btn" data-scenario="RBI_RATE_HIKE" data-sym="${escapeHtml(data.thesis.symbol)}">🏦 RBI Hikes Repo +25bps</button>
-          <button class="sim-btn" data-scenario="INR_DEPRECIATION" data-sym="${escapeHtml(data.thesis.symbol)}">💵 USD/INR Weakens ₹86.50</button>
-          <button class="sim-btn" data-scenario="MARGIN_COMPRESSION" data-sym="${escapeHtml(data.thesis.symbol)}">📉 Margins Drop -250bps</button>
+          <button class="sim-btn" data-scenario="CRUDE_SURGE" data-sym="${escapeHtml(sym)}">🛢️ Crude Spikes $95+</button>
+          <button class="sim-btn" data-scenario="RBI_RATE_HIKE" data-sym="${escapeHtml(sym)}">🏦 RBI Hikes Repo +25bps</button>
+          <button class="sim-btn" data-scenario="INR_DEPRECIATION" data-sym="${escapeHtml(sym)}">💵 USD/INR Weakens ₹86.50</button>
+          <button class="sim-btn" data-scenario="MARGIN_COMPRESSION" data-sym="${escapeHtml(sym)}">📉 Margins Drop -250bps</button>
         </div>
         <div class="sim-result-panel hidden" id="sim-result-${data.session_id}">
           <div class="sim-impact-tag" id="sim-impact-${data.session_id}"></div>
@@ -322,11 +494,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
           <strong style="font-size: 12px; color: var(--text-primary);">Key Institutional Pre-Mortem Takeaways:</strong>
           <ul style="margin: 6px 0 0 18px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
-            ${pm.educational_takeaways.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+            ${(pm.educational_takeaways || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
           </ul>
         </div>
 
         <div class="action-buttons-row">
+          <button class="rebuttal-btn" data-sym="${escapeHtml(sym)}">
+            <span>🥊 Spar / Rebut</span>
+          </button>
           <button class="export-btn" onclick="window.open('/api/export/${data.session_id}?format=pdf', '_blank')">
             <span>Download Pre-Mortem One-Pager (PDF)</span>
           </button>
@@ -336,7 +511,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
-
 
     container.innerHTML = cardHtml;
     chatStream.appendChild(container);
@@ -350,13 +524,23 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Attach click handler to Rebuttal Spar button
+    const rebutBtn = container.querySelector(".rebuttal-btn");
+    if (rebutBtn) {
+      rebutBtn.addEventListener("click", () => {
+        userInput.value = `Regarding ${sym}: I challenge your argument on `;
+        userInput.focus();
+        userInput.setSelectionRange(userInput.value.length, userInput.value.length);
+      });
+    }
+
     // Attach click handlers to simulator scenario buttons
     container.querySelectorAll(".sim-btn").forEach((btn) => {
       btn.addEventListener("click", async () => {
         container.querySelectorAll(".sim-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         const scenario = btn.dataset.scenario;
-        const sym = btn.dataset.sym;
+        const targetSym = btn.dataset.sym;
         const resPanel = document.getElementById(`sim-result-${data.session_id}`);
         const impactTag = document.getElementById(`sim-impact-${data.session_id}`);
         const mechText = document.getElementById(`sim-mech-${data.session_id}`);
@@ -371,7 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const sRes = await fetch("/api/simulate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ symbol: sym, scenario_type: scenario })
+            body: JSON.stringify({ symbol: targetSym, scenario_type: scenario })
           });
           const sData = await sRes.json();
           impactTag.textContent = `${sData.scenario_title} → ${sData.estimated_impact}`;
@@ -390,8 +574,11 @@ document.addEventListener("DOMContentLoaded", () => {
     currentLKBFacts = lkbPacket.facts || [];
     lkbSymbolBadge.textContent = `${lkbPacket.symbol} (${lkbPacket.exchange})`;
 
+    // Update count badge
+    if (countAll) countAll.textContent = String(currentLKBFacts.length);
+
     // Update Friction Gauge
-    const score = preMortem.friction_score || 50;
+    const score = preMortem ? (preMortem.friction_score || 50) : 50;
     frictionScoreVal.textContent = `${score} / 100`;
     frictionProgress.style.width = `${score}%`;
 
@@ -406,9 +593,21 @@ document.addEventListener("DOMContentLoaded", () => {
       frictionDesc.textContent = "Low Adversarial Friction: Thesis has reasonable statistical alignment.";
     }
 
-    // Populate LKB Table
+    renderLKBTable();
+  }
+
+  function renderLKBTable() {
     lkbTbody.innerHTML = "";
-    currentLKBFacts.forEach((fact) => {
+    const filtered = activeCategory === "ALL"
+      ? currentLKBFacts
+      : currentLKBFacts.filter(f => (f.category || "").toUpperCase() === activeCategory);
+
+    if (filtered.length === 0) {
+      lkbTbody.innerHTML = `<tr><td colspan="5" class="empty-table-msg">No facts found in category '${activeCategory}'.</td></tr>`;
+      return;
+    }
+
+    filtered.forEach((fact) => {
       const tr = document.createElement("tr");
       tr.id = `row-${fact.id}`;
       tr.innerHTML = `
@@ -428,6 +627,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function highlightFactRow(factId) {
+    // Switch to ALL tab if row is hidden under another category
+    const fact = currentLKBFacts.find((f) => f.id === factId);
+    if (fact && activeCategory !== "ALL" && (fact.category || "").toUpperCase() !== activeCategory) {
+      activeCategory = "ALL";
+      document.querySelectorAll(".filter-chip").forEach(b => {
+        b.classList.toggle("active", b.dataset.category === "ALL");
+      });
+      renderLKBTable();
+    }
+
     // Clear previous highlight
     document.querySelectorAll(".lkb-table tr").forEach((r) => r.classList.remove("highlighted"));
 
@@ -437,7 +646,6 @@ document.addEventListener("DOMContentLoaded", () => {
       row.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
-    const fact = currentLKBFacts.find((f) => f.id === factId);
     if (fact) {
       evidenceId.textContent = `CITATION: [${fact.id}] ${fact.metric}`;
       evidenceSource.textContent = `${fact.source} (${fact.category})`;
