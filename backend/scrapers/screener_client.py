@@ -100,4 +100,58 @@ class ScreenerClient:
             if pledge_match:
                 result["ratios"]["Promoter Pledging"] = float(pledge_match.group(1))
 
+        # Forensic Deep-Dive: Cash Flow from Operations (CFO) vs Net Profit (PAT)
+        cfo_values: List[float] = []
+        pat_values: List[float] = []
+
+        cf_sec = soup.find("section", id="cash-flow")
+        if cf_sec:
+            for row in cf_sec.find_all("tr"):
+                row_text = row.get_text(strip=True)
+                if "cash from operating activity" in row_text.lower() or "operating activity" in row_text.lower():
+                    cols = row.find_all("td")[1:]
+                    for c in cols[-3:]:  # Last 3 reported fiscal years
+                        num_str = re.sub(r"[^\d.-]", "", c.get_text(strip=True))
+                        try:
+                            cfo_values.append(float(num_str))
+                        except ValueError:
+                            pass
+                    break
+
+        pl_sec = soup.find("section", id="profit-loss")
+        if pl_sec:
+            for row in pl_sec.find_all("tr"):
+                row_text = row.get_text(strip=True)
+                if "net profit" in row_text.lower():
+                    cols = row.find_all("td")[1:]
+                    for c in cols[-3:]:  # Last 3 reported fiscal years
+                        num_str = re.sub(r"[^\d.-]", "", c.get_text(strip=True))
+                        try:
+                            pat_values.append(float(num_str))
+                        except ValueError:
+                            pass
+                    break
+
+        # Compute Accrual Quality Divergence
+        if cfo_values and pat_values and len(cfo_values) == len(pat_values):
+            tot_cfo = sum(cfo_values)
+            tot_pat = sum(pat_values)
+            result["forensics"] = {
+                "recent_cfo": cfo_values,
+                "recent_pat": pat_values,
+                "cumulative_3y_cfo": round(tot_cfo, 2),
+                "cumulative_3y_pat": round(tot_pat, 2),
+            }
+            if tot_pat > 0:
+                cfo_pat_ratio = round(tot_cfo / tot_pat, 2)
+                result["forensics"]["cfo_to_pat_ratio"] = cfo_pat_ratio
+                if cfo_pat_ratio < 0.70:
+                    alert_msg = f"Forensic Accrual Risk: 3-Year CFO/PAT ratio is {cfo_pat_ratio} (Operating Cash Flow lags paper accounting Net Profit)."
+                    result["red_flags"].append(alert_msg)
+            elif tot_cfo < 0 and tot_pat <= 0:
+                result["red_flags"].append("Severe Cash Burn: Company reports negative operating cash flow alongside accounting net losses.")
+        else:
+            result["forensics"] = {}
+
         return result
+

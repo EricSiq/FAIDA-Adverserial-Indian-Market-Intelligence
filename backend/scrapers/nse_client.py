@@ -1,12 +1,18 @@
-import httpx
 from typing import Dict, Any, Optional
 import time
 import logging
 
+try:
+    from curl_cffi import requests as curl_requests
+    HAS_CURL_CFFI = True
+except ImportError:
+    import httpx
+    HAS_CURL_CFFI = False
+
 logger = logging.getLogger("faida.scrapers.nse")
 
 class NSEClient:
-    """Resilient client for unofficial NSE India public API endpoints."""
+    """Resilient client for unofficial NSE India public API endpoints with TLS fingerprint impersonation."""
 
     BASE_URL = "https://www.nseindia.com"
     QUOTE_URL = "https://www.nseindia.com/api/quote-equity?symbol={symbol}"
@@ -20,7 +26,12 @@ class NSEClient:
     }
 
     def __init__(self):
-        self.session = httpx.Client(headers=self.HEADERS, timeout=3.5, follow_redirects=True)
+        if HAS_CURL_CFFI:
+            self.session = curl_requests.Session(impersonate="chrome120", headers=self.HEADERS, timeout=6.0)
+            self.is_curl_cffi = True
+        else:
+            self.session = httpx.Client(headers=self.HEADERS, timeout=5.0, follow_redirects=True)
+            self.is_curl_cffi = False
         self.last_handshake = 0.0
 
     def __enter__(self):
@@ -35,6 +46,7 @@ class NSEClient:
             self.session.close()
         except Exception:
             pass
+
 
     def _ensure_cookies(self):
         """Refresh cookie jar every 10 minutes or on first call."""
