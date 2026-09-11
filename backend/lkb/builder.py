@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import uuid
 from datetime import datetime
 
@@ -11,15 +11,27 @@ from backend.lkb.models import (
 from backend.scrapers.yfinance_client import YFinanceClient
 from backend.scrapers.screener_client import ScreenerClient
 from backend.scrapers.nse_client import NSEClient
+from backend.db.feature_store import FeatureStore
 
 class LKBBuilder:
     """Consolidates scraped Indian market signals into a deterministic Local Knowledge Base (LKB)."""
 
-    def __init__(self):
+    def __init__(self, use_cache: bool = True, feature_store: Optional[FeatureStore] = None):
         self.nse_client = NSEClient()
+        self.use_cache = use_cache
+        self.feature_store = feature_store or (FeatureStore() if use_cache else None)
 
-    def build_equity_packet(self, symbol: str, exchange: str = "NSE") -> LKBPacket:
+    def build_equity_packet(self, symbol: str, exchange: str = "NSE", force_refresh: bool = False) -> LKBPacket:
         clean_symbol = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+        
+        if self.use_cache and not force_refresh and self.feature_store:
+            cached = self.feature_store.get(clean_symbol, "EQUITY_PACKET")
+            if cached:
+                try:
+                    return LKBPacket(**cached)
+                except Exception:
+                    pass
+
         session_id = f"faida-{clean_symbol}-{uuid.uuid4().hex[:8]}"
         facts: List[LKBFact] = []
         fact_idx = 1
@@ -267,7 +279,7 @@ class LKBBuilder:
         ))
         fact_idx += 1
 
-        return LKBPacket(
+        packet = LKBPacket(
             session_id=session_id,
             symbol=clean_symbol,
             exchange=exchange,
@@ -279,4 +291,12 @@ class LKBBuilder:
                 "red_flag_count": len(red_flags)
             }
         )
+
+        if self.use_cache and self.feature_store:
+            try:
+                self.feature_store.set(clean_symbol, "EQUITY_PACKET", packet.model_dump(), ttl_seconds=900)
+            except Exception:
+                pass
+
+        return packet
 
