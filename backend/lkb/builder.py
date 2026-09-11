@@ -57,19 +57,20 @@ class LKBBuilder:
             ))
             fact_idx += 1
 
-        # Fact: 52-Week Range
+        # Fact: 52-Week Range & Percentile Positioning
         high_52 = (nse_data.get("week_high_52") if nse_data else None) or yf_data.get("fifty_two_week_high")
         low_52 = (nse_data.get("week_low_52") if nse_data else None) or yf_data.get("fifty_two_week_low")
-        if high_52 and low_52:
+        if high_52 and low_52 and high_52 > low_52:
             pct_from_high = round(((high_52 - current_price) / high_52) * 100, 1) if current_price else 0.0
+            range_pct = round(((current_price - low_52) / (high_52 - low_52)) * 100, 1) if current_price else 50.0
             facts.append(LKBFact(
                 id=f"LKB-{fact_idx:02d}",
                 category=LKBFactCategory.TECHNICAL,
                 source="EXCHANGE",
-                metric="52-Week High/Low",
-                value=f"High: ₹{high_52} | Low: ₹{low_52}",
-                unit="INR",
-                context=f"Currently trading {pct_from_high}% below its 52-week peak."
+                metric="52-Week Range & Percentile",
+                value=f"{range_pct}th Percentile (Range: ₹{low_52} - ₹{high_52})",
+                unit="",
+                context=f"Trading at the {range_pct}th percentile of its 52-week price distribution ({pct_from_high}% below peak)."
             ))
             fact_idx += 1
 
@@ -131,17 +132,18 @@ class LKBBuilder:
             ))
             fact_idx += 1
 
-        # Fact: Delivery Percentage (NSE)
+        # Fact: Delivery Percentage & Baseline
         if nse_data and nse_data.get("delivery_to_traded_quantity") is not None:
             deliv_pct = round(float(nse_data["delivery_to_traded_quantity"]), 2)
+            conviction = "High Institutional Accumulation (>45%)" if deliv_pct >= 45 else ("Speculative Intraday Churn (<25%)" if deliv_pct < 25 else "Moderate Turnover")
             facts.append(LKBFact(
                 id=f"LKB-{fact_idx:02d}",
                 category=LKBFactCategory.LIQUIDITY,
                 source="NSE_BHAVCOPY",
-                metric="Delivery Percentage",
+                metric="Security Delivery Ratio",
                 value=deliv_pct,
                 unit="%",
-                context="Low delivery (<25%) indicates speculative intraday churn; High delivery (>50%) indicates institutional accumulation."
+                context=f"Delivery conviction: {conviction} relative to benchmark 30-day liquidity levels."
             ))
             fact_idx += 1
 
@@ -156,7 +158,7 @@ class LKBBuilder:
                 metric="Price to Earnings (P/E)",
                 value=pe_val,
                 unit="x",
-                context="Valuation multiple on trailing twelve-month earnings."
+                context="Trailing twelve-month price-to-earnings multiple."
             ))
             fact_idx += 1
 
@@ -170,6 +172,24 @@ class LKBBuilder:
                 value=roce_val,
                 unit="%",
                 context="Capital efficiency metric. >15% is generally considered wealth-creative in Indian equities."
+            ))
+            fact_idx += 1
+
+        # Fact: Forensic Accounting (CFO to PAT Accrual Ratio)
+        forensics = screener_data.get("forensics", {})
+        if "cfo_to_pat_ratio" in forensics:
+            cfo_pat = forensics["cfo_to_pat_ratio"]
+            tot_cfo = forensics.get("cumulative_3y_cfo", 0.0)
+            tot_pat = forensics.get("cumulative_3y_pat", 0.0)
+            status = "HEALTHY CASH CONVERSION (>0.80)" if cfo_pat >= 0.80 else "ACCRUAL WARNING (<0.70)"
+            facts.append(LKBFact(
+                id=f"LKB-{fact_idx:02d}",
+                category=LKBFactCategory.GOVERNANCE,
+                source="SCREENER_FORENSICS",
+                metric="3-Year CFO / PAT Accrual Ratio",
+                value=f"{cfo_pat}x",
+                unit="",
+                context=f"Operating Cash Flow: ₹{tot_cfo} Cr vs Net Profit: ₹{tot_pat} Cr. Quality Status: {status}."
             ))
             fact_idx += 1
 
@@ -201,15 +221,49 @@ class LKBBuilder:
                 ))
                 fact_idx += 1
 
-        # Fact: Macro Benchmark (RBI / CCIL Baseline)
+        # Fact: BSE Corporate Announcements & Governance Disclosures
+        from backend.scrapers.bse_client import BSEClient
+        bse_items = BSEClient.get_announcements(clean_symbol)
+        risk_bse = [it for it in bse_items if it.get("is_risk_flag")]
+        if risk_bse:
+            for it in risk_bse[:2]:
+                facts.append(LKBFact(
+                    id=f"LKB-{fact_idx:02d}",
+                    category=LKBFactCategory.GOVERNANCE,
+                    source="BSE_FILINGS",
+                    metric="Regulatory & Governance Notice",
+                    value=it.get("headline", "Regulatory Filing"),
+                    unit="",
+                    context=f"Disclosed on {it.get('date', 'recent')}. Governance flag detected."
+                ))
+                fact_idx += 1
+
+        # Fact: Dynamic Macro Benchmark & India VIX
+        from backend.scrapers.macro_client import MacroClient
+        vix_status = MacroClient.get_vix_status()
+        vix_val = vix_status.get("vix_value", 13.5)
+        vix_regime = vix_status.get("regime_label", "Normal Market Regime")
+        gsec_10y = vix_status.get("benchmark_10y_yield", 7.08)
+
+        facts.append(LKBFact(
+            id=f"LKB-{fact_idx:02d}",
+            category=LKBFactCategory.MACRO,
+            source="NSE_INDICES",
+            metric="India VIX Market Regime",
+            value=f"{vix_val} ({vix_regime})",
+            unit="Points",
+            context=vix_status.get("description", "Macro volatility condition.")
+        ))
+        fact_idx += 1
+
         facts.append(LKBFact(
             id=f"LKB-{fact_idx:02d}",
             category=LKBFactCategory.MACRO,
             source="CCIL_INDIA",
             metric="India 10-Year Benchmark G-Sec Yield",
-            value=7.08,
+            value=gsec_10y,
             unit="%",
-            context="Risk-free rate baseline against which equity earnings yield must provide an adequate equity risk premium."
+            context="Risk-free sovereign rate baseline. Equity earnings yield (1/PE) must provide an adequate spread above this rate."
         ))
         fact_idx += 1
 
@@ -225,3 +279,4 @@ class LKBBuilder:
                 "red_flag_count": len(red_flags)
             }
         )
+

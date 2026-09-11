@@ -35,3 +35,15 @@ def test_lkb_packet_structure():
     assert packet.symbol == "RELIANCE"
     assert len(packet.facts) == 1
     assert packet.facts[0].id == "LKB-01"
+
+def test_lkb_builder_generation():
+    from backend.lkb.builder import LKBBuilder
+    builder = LKBBuilder()
+    packet = builder.build_equity_packet("TCS", "NSE")
+    assert packet.symbol == "TCS"
+    assert len(packet.facts) >= 4
+    
+    metrics = [f.metric for f in packet.facts]
+    assert any("India VIX" in m for m in metrics)
+    assert any("G-Sec Yield" in m for m in metrics)
+
