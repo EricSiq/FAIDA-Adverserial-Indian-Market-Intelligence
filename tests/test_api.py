@@ -15,11 +15,14 @@ def test_get_config_endpoint():
 
 def test_update_config_endpoint():
     resp = client.post("/api/config", json={
-        "active_provider": "ollama",
+        "active_provider": "groq",
+        "groq_model": "qwen/qwen3.8-27b",
         "default_local_model": "gemma4:e4b"
     })
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
+    assert resp.json()["config"]["active_provider"] == "groq"
+    assert resp.json()["config"]["groq_model"] == "qwen/qwen3.8-27b"
 
 def test_get_history_endpoint():
     resp = client.get("/api/history")
@@ -164,4 +167,17 @@ def test_static_frontend_index():
     assert "macro-ribbon" in resp.text
     assert "new-thesis-btn" in resp.text
     assert "filter-chip" in resp.text
+
+def test_llm_provider_groq_and_fallback():
+    from backend.llm.provider import LLMProvider
+    from backend.config import settings
+    # 1. Deterministic fallback produces structured text
+    fallback_text = LLMProvider._deterministic_fallback("Buying Reliance Industries")
+    assert "Adversarial Red-Team Counter-Thesis" in fallback_text
+    assert "Grounded Risk Checklist" in fallback_text
+
+    # 2. General completion execution works without unhandled error
+    comp = LLMProvider.generate_completion("Test prompt", "System instruction")
+    assert isinstance(comp, str)
+    assert len(comp) > 0
 

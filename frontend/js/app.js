@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeSettingsBtn = document.getElementById("close-settings-btn");
   const saveSettingsBtn = document.getElementById("save-settings-btn");
   const settingProviderSelect = document.getElementById("setting-provider-select");
+  const settingGroqModel = document.getElementById("setting-groq-model");
   const settingOllamaModel = document.getElementById("setting-ollama-model");
   const settingGroqKey = document.getElementById("setting-groq-key");
 
@@ -64,13 +65,45 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Settings Modal Open/Close
+  // Settings Modal Open/Close & Save
   providerBtn.addEventListener("click", () => {
     settingsModal.classList.remove("hidden");
   });
   closeSettingsBtn.addEventListener("click", () => {
     settingsModal.classList.add("hidden");
   });
+
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener("click", async () => {
+      const payload = {
+        active_provider: settingProviderSelect.value,
+        default_local_model: settingOllamaModel.value.trim() || "gemma4:e4b",
+        groq_model: settingGroqModel ? settingGroqModel.value.trim() || "qwen/qwen3.8-27b" : "qwen/qwen3.8-27b"
+      };
+      if (settingGroqKey && settingGroqKey.value.trim()) {
+        payload.groq_api_key = settingGroqKey.value.trim();
+      }
+      try {
+        const res = await fetch("/api/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.status === "ok") {
+          const cfg = data.config;
+          if (cfg.active_provider === "groq") {
+            providerLabel.textContent = "Groq: " + cfg.groq_model;
+          } else {
+            providerLabel.textContent = "Ollama: " + cfg.default_local_model;
+          }
+          settingsModal.classList.add("hidden");
+        }
+      } catch (err) {
+        alert("Error saving configuration: " + err.message);
+      }
+    });
+  }
 
   // History Modal Open/Close & Fetch
   historyBtn.addEventListener("click", async () => {
@@ -146,7 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         providerLabel.textContent = "Ollama: " + cfg.default_local_model;
       }
-      settingProviderSelect.value = cfg.active_provider || "ollama";
+      settingProviderSelect.value = cfg.active_provider || "groq";
+      if (settingGroqModel) settingGroqModel.value = cfg.groq_model || "qwen/qwen3.8-27b";
       settingOllamaModel.value = cfg.default_local_model || "gemma4:e4b";
     })
     .catch((err) => console.log("Config load error:", err));

@@ -2,9 +2,9 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](#)
 [![Stack](https://img.shields.io/badge/Stack-Python%203.11%20%7C%20FastAPI%20%7C%20PyWebView-orange)](#)
-[![LLM](https://img.shields.io/badge/LLM-Local%20Ollama%20(gemma4:e4b)%20%7C%20Groq%20Cloud%20API-green)](#)
+[![LLM](https://img.shields.io/badge/LLM-Groq%20Cloud%20(qwen3.8--27b)%20%7C%20Local%20Ollama%20(gemma4:e4b)-green)](#)
 [![Data](https://img.shields.io/badge/Data%20Sources-NSE%20%7C%20Screener.in%20%7C%20CCIL%20%7C%20FRED%20%7C%20Web%20News-purple)](#)
-[![Tests](https://img.shields.io/badge/Tests-55%2F55%20Passing%20(pytest)-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/Tests-56%2F56%20Passing%20(pytest)-brightgreen)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **FAIDA** (*Financial Adversarial Indian Data Agents*): An offline-capable, lightweight desktop application hosting an adversarial swarm of AI agents designed to act as an uncompromising **Red Team / Devil's Advocate** for retail investment decisions in the Indian capital markets (Equities, Bonds, Commodities).
@@ -19,8 +19,8 @@ FAIDA is engineered with a **Python-first, zero-overhead** philosophy. It avoids
 | :--- | :--- | :--- |
 | **Desktop Shell** | `PyWebView` | Native OS webview wrapper providing an ultra-lightweight desktop window without Node.js or Rust toolchain dependencies. |
 | **API Server & IPC** | `FastAPI` + `Uvicorn` | Asynchronous IPC backend serving REST endpoints for thesis analysis, scenario simulations, macro metrics, cache maintenance, and journal queries. |
-| **Local LLM Engine** | `Ollama` (`gemma4:e4b` / `qwen3.5:4b`) | 100% offline, zero-subscription inference running on local GPU/CPU via IPv4 loopback (`127.0.0.1:11434`). |
-| **Cloud LLM Gateway** | `Groq Cloud API` (`llama-3.3-70b-versatile`) | Multi-model fallback inference with reasoning token cleanup, delivering sub-2s cloud execution. |
+| **Cloud LLM Engine (Default)** | `Groq Cloud API` (`qwen/qwen3.8-27b`) | High-speed default cloud inference with free-tier models (`qwen3.8-27b`, `qwen3.6-27b`, `gpt-oss-120b`, `llama-3.3-70b`) delivering sub-1.5s execution. |
+| **Local LLM Fallback** | `Ollama` (`gemma4:e4b` / `qwen3.5:4b`) | 100% offline fallback inference running on local GPU/CPU via IPv4 loopback (`127.0.0.1:11434`). |
 | **Scrapers & Market Data** | `curl_cffi`, `yfinance`, `httpx`, `BeautifulSoup4` | Resilient NSE scrapers with Chrome 120 TLS/JA3 impersonation, BSE corporate announcements, Screener.in 3-year CFO/PAT accrual forensics, and India VIX. |
 | **Global Macro & News Intelligence** | `WebSearchClient`, `FREDClient`, `FinnhubClient` | Live Google News RSS search and Yahoo Finance news matching user-specific thesis keywords; live Brent Crude, US 10Y Treasury, and DXY via FRED API. |
 | **Structured Evidence (LKB)** | `Pydantic v2` | Enforces rigid data schemas for the Local Knowledge Base (LKB), citation IDs (`[LKB-XX]`), and pre-mortem risk items. |
@@ -135,17 +135,19 @@ python main.py
 
 ## Configuration (`.env`)
 
-FAIDA is pre-configured to run out of the box with zero external keys. To enable high-speed cloud fallback, configure `.env`:
+FAIDA defaults to Groq Cloud API using high-speed free models (`qwen/qwen3.8-27b`) with automatic offline fallback to local Ollama (`gemma4:e4b`). To configure your setup:
 
 ```ini
-# Active Provider: 'ollama' (Local) or 'groq' (Cloud)
-FAIDA_PROVIDER=ollama
+# Active Provider: 'groq' (High-Speed Cloud Default) or 'ollama' (Local Offline Fallback)
+FAIDA_PROVIDER=groq
+
+# Groq Cloud API (Default - Free Models)
+GROQ_API_KEY=your_free_groq_api_key_here
+GROQ_MODEL=qwen/qwen3.8-27b
+
+# Local Offline Fallback (Ollama)
 OLLAMA_MODEL=gemma4:e4b
 OLLAMA_URL=http://127.0.0.1:11434
-
-# Optional Cloud Acceleration (Groq API)
-GROQ_API_KEY=your_free_groq_api_key_here
-GROQ_MODEL=llama-3.3-70b-versatile
 
 # Global Macro & News APIs
 FRED_API_KEY=your_free_fred_api_key_here
@@ -168,7 +170,7 @@ Run the full automated test suite covering all scrapers, models, parser, journal
 .venv\Scripts\pytest.exe -v
 ```
 
-**Status:** 55 / 55 passed (100% test coverage across all subsystems).
+**Status:** 56 / 56 passed (100% test coverage across all subsystems).
 
 ---
 

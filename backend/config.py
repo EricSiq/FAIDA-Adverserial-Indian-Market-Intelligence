@@ -22,10 +22,10 @@ class Settings(BaseModel):
     DEFAULT_LOCAL_MODEL: str = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
     
-    # Cloud Fallback (Groq API or Gemini)
+    # Cloud Inference (Groq Free Tier Models)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-    ACTIVE_PROVIDER: str = os.getenv("FAIDA_PROVIDER", "ollama")  # 'ollama' or 'groq'
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+    ACTIVE_PROVIDER: str = os.getenv("FAIDA_PROVIDER", "groq")  # 'groq' (default) or 'ollama'
     
     # Extended Macro & Broker APIs (Optional)
     FRED_API_KEY: str = os.getenv("FRED_API_KEY", "")

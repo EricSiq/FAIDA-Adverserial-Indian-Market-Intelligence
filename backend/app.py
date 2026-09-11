@@ -67,6 +67,7 @@ class AnalyzeRequest(BaseModel):
 class ConfigUpdateRequest(BaseModel):
     active_provider: Optional[str] = None
     groq_api_key: Optional[str] = None
+    groq_model: Optional[str] = None
     default_local_model: Optional[str] = None
 
 @app.post("/api/analyze")
@@ -316,6 +317,8 @@ def update_config(req: ConfigUpdateRequest):
         settings.ACTIVE_PROVIDER = req.active_provider
     if req.groq_api_key is not None:
         settings.GROQ_API_KEY = req.groq_api_key
+    if req.groq_model:
+        settings.GROQ_MODEL = req.groq_model
     if req.default_local_model:
         settings.DEFAULT_LOCAL_MODEL = req.default_local_model
     return {"status": "ok", "config": get_config()}

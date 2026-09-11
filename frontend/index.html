@@ -366,13 +366,17 @@
           <div class="setting-group">
             <label>Active Provider:</label>
             <select id="setting-provider-select">
-              <option value="ollama">Local Ollama (Offline)</option>
-              <option value="groq">Groq Cloud API (Ultra-Fast)</option>
+              <option value="groq">Groq Cloud API (Default - Free Models)</option>
+              <option value="ollama">Local Ollama (Offline Fallback)</option>
             </select>
           </div>
           <div class="setting-group">
-            <label>Local Ollama Model:</label>
-            <input type="text" id="setting-ollama-model" value="gemma4:e4b" placeholder="e.g. gemma4:e4b or qwen3.5:4b">
+            <label>Groq Model (Free):</label>
+            <input type="text" id="setting-groq-model" value="qwen/qwen3.8-27b" placeholder="e.g. qwen/qwen3.8-27b">
+          </div>
+          <div class="setting-group">
+            <label>Local Ollama Model (Fallback):</label>
+            <input type="text" id="setting-ollama-model" value="gemma4:e4b" placeholder="e.g. gemma4:e4b">
           </div>
           <div class="setting-group">
             <label>Groq API Key (Optional for cloud):</label>

@@ -64,7 +64,7 @@ pytest -v
 ```
 
 Ensure that:
-* All existing test cases pass (55/55).
+* All existing test cases pass (56/56).
 * New features include corresponding unit and integration tests in `tests/`.
 * Code syntax compiles cleanly with `python -m compileall backend tests main.py`.
 

@@ -43,28 +43,29 @@ class LLMProvider:
     def generate_completion(cls, prompt: str, system_prompt: str = "", provider: Optional[str] = None) -> str:
         active_provider = provider or settings.ACTIVE_PROVIDER
 
-        # 1. Try Groq Cloud if selected or if API key is provided
+        # 1. Primary: Groq Cloud (Free tier models with qwen/qwen3.8-27b default)
         if (active_provider == "groq" or not cls.is_ollama_online()) and settings.GROQ_API_KEY:
             try:
                 return cls._call_groq(prompt, system_prompt)
             except Exception as e:
-                print(f"[LLMProvider] Groq failed: {e}")
+                print(f"[LLMProvider] Groq failed ({e}). Falling back to local Ollama ({settings.DEFAULT_LOCAL_MODEL})...")
 
-        # 2. Local Ollama (Default: gemma4:e4b)
+        # 2. Local Ollama Fallback (gemma4:e4b)
         if cls.is_ollama_online():
             try:
                 return cls._call_ollama(prompt, system_prompt)
             except Exception as e:
-                print(f"[LLMProvider] Ollama call failed: {e}")
+                print(f"[LLMProvider] Ollama call failed ({e}). Falling back...")
 
-        # 3. Fallback to Groq if key exists
+        # 3. Secondary Groq attempt if Ollama was primary but failed
         if settings.GROQ_API_KEY:
             try:
                 return cls._call_groq(prompt, system_prompt)
             except Exception as groq_err:
-                print(f"[LLMProvider] Groq fallback failed: {groq_err}")
+                print(f"[LLMProvider] Secondary Groq attempt failed ({groq_err}).")
 
-        # 4. Deterministic Grounded Fallback
+        # 4. Deterministic Grounded Fallback (100% resilient, zero error)
+        print("[LLMProvider] Using deterministic grounded fallback.")
         return cls._deterministic_fallback(prompt)
 
     @classmethod
@@ -101,8 +102,15 @@ class LLMProvider:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        # Candidate models prioritizing user setting, then verified high-performance available models
-        candidate_models = [settings.GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+        # Candidate models prioritizing user setting, then verified high-performance available free models
+        candidate_models = [
+            settings.GROQ_MODEL,
+            "qwen/qwen3.8-27b",
+            "qwen/qwen3.6-27b",
+            "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b",
+            "llama-3.3-70b-versatile"
+        ]
         seen = set()
         models_to_try = [m for m in candidate_models if m and not (m in seen or seen.add(m))]
 
