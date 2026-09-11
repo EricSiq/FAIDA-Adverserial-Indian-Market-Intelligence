@@ -1,3 +1,18 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.db.feature_store
+Description:
+    Embedded DuckDB Local Feature Store & High-Frequency Market Cache.
+    
+    Provides fast, persistent, TTL-governed key-value caching for scraped market indicators,
+    fundamentals, and assembled LKB packets.
+    
+    Architectural Guarantees:
+        - Thread-Safe: Uses an internal Python threading.Lock to serialize DuckDB queries.
+        - Granular Invalidation: TTL-based expiration per feature key (e.g., 900s for live quotes).
+        - Zero-Setup: Automatic SQLite-like table creation and parent directory bootstrapping.
+"""
+
 import duckdb
 from typing import Dict, Any, Optional
 import json
@@ -7,7 +22,10 @@ import threading
 from backend.config import settings
 
 class FeatureStore:
-    """Local embedded DuckDB feature cache for high-frequency market data and fundamentals."""
+    """
+    Local embedded DuckDB feature cache for high-frequency market data and fundamentals.
+    Prevents redundant web scraping and network throttling while preserving offline resilience.
+    """
 
     def __init__(self, db_path: Optional[str] = None):
         self.db_path = db_path or settings.FEATURE_STORE_PATH

@@ -1,3 +1,22 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.agents.educator_agent
+Description:
+    Synthesis & Pre-Mortem Audit Engine.
+    
+    Responsibilities:
+        1. Calculates the deterministic Adversarial Friction Score (AFS) on a scale of 10 to 95.
+           Incorporates RSI overbought/oversold limits, P/E multiple expansion, promoter pledging,
+           delivery volume turnover conviction, and cognitive bias severity penalties.
+        2. Synthesizes a structured PreMortemReport containing:
+           - Grounded headline risk verdicts
+           - Categorized risk items with direct LKB citation pointers
+           - Bullish/Bearish psychological traps
+           - Structural blind spots and corporate governance alarms
+           - Concrete invalidation stops and profit targets
+           - Pedagogical market microstructure takeaways for Indian retail investors
+"""
+
 from typing import Dict, Any, List
 from backend.lkb.models import (
     UserThesis,
@@ -9,7 +28,10 @@ from backend.lkb.models import (
 )
 
 class EducatorAgent:
-    """Calculates the Adversarial Friction Score (AFS) and compiles the structured Pre-Mortem Report."""
+    """
+    Synthesizes the adversarial debate and grounded LKB facts into an objective pre-mortem audit.
+    Calculates the deterministic Adversarial Friction Score (AFS) to visually convey downside probability.
+    """
 
     @classmethod
     def synthesize(cls, thesis: UserThesis, lkb: LKBPacket, counter_thesis_text: str, biases: List[Any] = None) -> PreMortemReport:

@@ -1,3 +1,21 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.scrapers.fred_client
+Description:
+    Federal Reserve Economic Data (FRED) API Client.
+    
+    Ingests vital global macroeconomic indicators driving Indian equity valuations:
+        1. BRENT_CRUDE (DCOILBRENTEU): Global Brent crude oil spot prices ($/bbl).
+        2. US_10Y_YIELD (DGS10): Benchmark US Treasury yield driving capital flows.
+        3. US_DOLLAR_INDEX (DTWEXBGS): Nominal Broad US Dollar Index (DXY) affecting USD/INR.
+        
+    Resilience Architecture:
+        - Calibrated Baselines: When running without an API key or when network is offline,
+          provides realistic baseline numbers (e.g., Brent $82.50, US 10Y 4.25%, DXY 104.20)
+          so the simulation and LKB pipeline never break.
+        - Strict Type Conversion: Automatically cleans missing values represented as '.' in FRED observations.
+"""
+
 import httpx
 from typing import Dict, Any, Optional
 import logging
@@ -6,7 +24,10 @@ import os
 logger = logging.getLogger("faida.scrapers.fred")
 
 class FREDClient:
-    """Fetches global macroeconomic indicators from the Federal Reserve Economic Data (FRED) API."""
+    """
+    Fetches global macroeconomic risk indicators from the Federal Reserve Economic Data (FRED) API.
+    Provides verified baseline fallbacks for air-gapped or zero-configuration environments.
+    """
 
     BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 

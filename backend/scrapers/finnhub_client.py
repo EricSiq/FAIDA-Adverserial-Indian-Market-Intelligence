@@ -1,3 +1,21 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.scrapers.finnhub_client
+Description:
+    Finnhub Financial Data Ingestion Client.
+    
+    Provides real-time company news, ADR developments, and macroeconomic news catalysts
+    for Indian equities that have American Depository Receipts (ADRs) or international coverage.
+    
+    Features & Fail-safes:
+        - Symbol Mapping: Maps Indian tickers to their corresponding US ADR tickers
+          (e.g., INFY -> INFY, HDFCBANK -> HDB, TATAMOTORS -> TTM, ICICIBANK -> IBN).
+        - Multi-Tier Fallback: If no company-specific news is returned, gracefully queries
+          broader global market news.
+        - Zero-Key Tolerance: Returns empty list if FINNHUB_API_KEY is unset, enabling
+          completely offline or baseline operation without throwing unhandled exceptions.
+"""
+
 import os
 import httpx
 import logging
@@ -8,7 +26,10 @@ from backend.config import settings
 logger = logging.getLogger("faida.scrapers.finnhub")
 
 class FinnhubClient:
-    """Client for Finnhub Financial API: Company News, Market Sentiment, and News Catalysts."""
+    """
+    Client for Finnhub Financial API: Company News, Market Sentiment, and News Catalysts.
+    Enriches LKB packets with global institutional sentiment and news catalysts.
+    """
 
     BASE_URL = "https://finnhub.io/api/v1"
 

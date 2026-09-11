@@ -1,3 +1,19 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.export.pdf_generator
+Description:
+    Institutional-Grade Pre-Mortem One-Pager PDF Exporter.
+    
+    Generates single-page institutional investment audit documents with:
+        1. Clean Typography & Layout: Formatted strictly for A4 print using ReportLab Platypus.
+        2. Strict XML Entity Escaping: Prevents unescaped '&', '<', or '>' in scraped Indian company
+           names or headlines (e.g. 'L&T', 'M&M') from breaking the ReportLab XML parser.
+        3. Explainability & Citations Layer: Lists every source URL and scraping provenance
+           (NSE Bhavcopy, Screener.in, BSE Filings, FRED, Finnhub) used in the analysis.
+        4. Professional Aesthetics: Minimalist, clean corporate styling with zero emojis,
+           structured tabular data, and prominent Adversarial Friction Score (AFS) visualization.
+"""
+
 import io
 import html
 from typing import Dict, Any, List
@@ -16,7 +32,10 @@ def _esc(val: Any) -> str:
     return html.escape(str(val))
 
 class PreMortemPDFGenerator:
-    """Generates clean, institutional-grade Pre-Mortem Audit One-Pager PDFs with zero emojis."""
+    """
+    Generates clean, institutional-grade Pre-Mortem Audit One-Pager PDFs with zero emojis
+    and full evidence citation tracking for explainable investment auditing.
+    """
 
     @classmethod
     def generate(cls, record: Dict[str, Any]) -> bytes:

@@ -46,17 +46,18 @@ graph TD
             Debater <--> LLMGateway{Grounding LLM Gateway}
             Educator <--> LLMGateway
             LLMGateway --> LocalLLM[Local Ollama: gemma4:e4b (Primary Local)\nFallback: qwen3.5:4b]
-            LLMGateway -. Fast Cloud Toggle .-> CloudLLM[Cloud API: Groq (Llama-3.3-70b) / Gemini 2.5 Flash]
+            LLMGateway -. Dynamic Cloud Cascade .-> CloudLLM[Cloud API: Groq\n(openai/gpt-oss-20b, gpt-oss-120b, qwen3.6-27b, llama-3.3-70b)]
         end
     end
     
-    subgraph Freely Available Indian Financial Endpoints
+    subgraph Freely Available Indian & Macro Endpoints
         Ingestion -.-> NSE[NSE India Live Quotes & Delivery %]
-        Ingestion -.-> Screener[Screener.in 10Y Fundamentals]
-        Ingestion -.-> MacroSrc[CCIL India Yield Curve & RBI DBIE]
-        Ingestion -.-> MCXSrc[MCX Gold, Silver & Crude Watch]
-        Ingestion -.-> NewsSrc[BSE Announcements & Moneycontrol RSS]
-        Ingestion -.-> YF[Yahoo Finance .NS / .BO Price Series]
+        Ingestion -.-> Screener[Screener.in 10Y Fundamentals & Forensics]
+        Ingestion -.-> MacroSrc[CCIL India Yield Curve & India VIX]
+        Ingestion -.-> FREDSrc[FRED St. Louis Fed Macro: Brent, US 10Y, DXY]
+        Ingestion -.-> FinnhubSrc[Finnhub API: ADR News & Global Catalysts]
+        Ingestion -.-> BSESrc[BSE Corporate Announcements & Disclosures]
+        Ingestion -.-> YF[Yahoo Finance .NS / .BO Price Series & EMAs]
     end
 ```
 

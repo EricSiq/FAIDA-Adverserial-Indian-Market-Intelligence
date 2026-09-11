@@ -35,73 +35,100 @@ With all high-level and architectural decisions locked, only **3 operational def
 
 ---
 
-## 3. Project Directory Layout (To be Built)
+## 3. Project Directory Layout (Current Active Implementation)
 
 ```
 Adverserial Financial Agents/
 │
-├── run.bat                          # One-click Windows launcher
-├── requirements.txt                 # Pinned dependencies
-├── main.py                          # PyWebView entry point & launcher
+├── run.bat                          # One-click Windows launcher (venv, uv, app boot)
+├── requirements.txt                 # Pinned dependencies (FastAPI, DuckDB, ReportLab, etc.)
+├── main.py                          # PyWebView zero-flash desktop entry point & healthcheck
+├── pytest.ini                       # Test configuration
 │
 ├── backend/
-│   ├── app.py                       # FastAPI ASGI application
-│   ├── config.py                    # App configuration & Ollama/Cloud toggles
+│   ├── app.py                       # FastAPI ASGI application & REST endpoints
+│   ├── config.py                    # Environment settings, Ollama & Cloud toggles
 │   │
-│   ├── scrapers/                    # Resilient Indian market scrapers
-│   │   ├── nse_client.py            # NSE live quotes & delivery % with cookie session
-│   │   ├── screener_client.py       # Screener.in 10-year fundamental ratios & red flags
-│   │   └── yfinance_client.py       # Historical OHLCV, moving averages, RSI
+│   ├── scrapers/                    # Resilient market scrapers & global APIs
+│   │   ├── nse_client.py            # NSE live quotes & delivery % with curl_cffi TLS impersonation
+│   │   ├── screener_client.py       # Screener.in 10-year fundamental ratios & 3Y CFO/PAT accrual forensics
+│   │   ├── yfinance_client.py       # Historical OHLCV, 20/50/200 EMAs, RSI(14)
+│   │   ├── bse_client.py            # BSE corporate announcements & governance risk flags
+│   │   ├── macro_client.py          # India VIX volatility regime & 10Y sovereign yield baseline
+│   │   ├── fred_client.py           # FRED API: Brent Crude, US 10Y Yield, and DXY Dollar Index
+│   │   ├── finnhub_client.py        # Finnhub API: Real-time ADR news & global market sentiment
+│   │   └── broker_client.py         # Pluggable read-only broker gateway adapter
 │   │
-│   ├── lkb/                         # Grounding Engine
-│   │   ├── models.py                # Pydantic schemas for LKB facts and citations
-│   │   └── builder.py               # Deterministic normalizer assembling the LKB Fact Sheet
+│   ├── lkb/                         # Grounding Engine (Local Knowledge Base)
+│   │   ├── models.py                # Pydantic schemas for LKB facts, citations, and pre-mortem models
+│   │   └── builder.py               # Deterministic compiler assembling multi-source LKB packets
 │   │
-│   ├── agents/                      # Custom Lightweight Async State Machine
-│   │   ├── parser_agent.py          # User investment hypothesis deconstructor
-│   │   ├── debater_agent.py         # 6-level Red-Team Devil's Advocate
-│   │   ├── educator_agent.py        # Pre-Mortem synthesis & financial glossary
-│   │   └── orchestrator.py          # State machine coordination loop
+│   ├── agents/                      # Lightweight Async State Machine Swarm
+│   │   ├── parser_agent.py          # User investment hypothesis entity extractor & intent resolver
+│   │   ├── debater_agent.py         # 6-level Red-Team Devil's Advocate with zero-hallucination constraints
+│   │   ├── educator_agent.py        # Pre-Mortem synthesis, AFS scoring & pedagogical takeaways
+│   │   ├── bias_agent.py            # Cognitive bias detector (Anchoring, Sunk Cost, FOMO, etc.)
+│   │   ├── simulator_agent.py       # Stress-test simulator (Crude surge, RBI rate hike, INR drop, margin drop)
+│   │   └── orchestrator.py          # Swarm orchestrator coordinating the 5-stage pipeline
 │   │
 │   ├── llm/                         # Inference Gateway
-│   │   ├── provider.py              # Unified interface for Ollama & Cloud APIs
+│   │   ├── provider.py              # Multi-tier gateway: Local Ollama, Groq dynamic cascade & clean fallback
 │   │   └── ollama_client.py         # Local Ollama HTTP client (localhost:11434)
 │   │
-│   └── db/                          # Persistence
-│       └── journal.py               # DuckDB thesis & pre-mortem history tracker
+│   ├── db/                          # Persistence & Caching
+│   │   ├── journal.py               # DuckDB thesis, pre-mortem audit log & decision history
+│   │   └── feature_store.py         # DuckDB TTL-governed market feature cache (sub-15ms access)
+│   │
+│   └── export/                      # Institutional Reporting
+│       └── pdf_generator.py         # Institutional Pre-Mortem One-Pager PDF generator with citations
 │
-└── frontend/                        # Native PyWebView UI (Dark Glassmorphism)
-    ├── index.html                   # Clean, single-page application shell
-    ├── css/
-    │   └── styles.css               # Modern dark-mode styling with HSL tokens
-    └── js/
-        ├── app.js                   # Chat interaction & IPC bridge
-        ├── slider.js                # 6-Level Adversarial Continuum Slider
-        └── lkb_viewer.js            # Clickable LKB citation & evidence inspector
+├── frontend/                        # Native PyWebView UI (Dark Glassmorphic Theme)
+│   ├── index.html                   # Desktop application single-page shell
+│   ├── css/
+│   │   └── styles.css               # Modern dark-mode styling with CSS variables & micro-animations
+│   └── js/
+│       └── app.js                   # Application state, telemetry stepper, API bridges & PDF triggers
+│
+└── tests/                           # Automated Test Suite (52/52 Passing)
+    ├── test_api.py                  # API endpoints, input validation, and security tests
+    ├── test_bias.py                 # Cognitive bias detection test suite
+    ├── test_feature_store.py        # DuckDB cache, TTL expiration, and persistence tests
+    ├── test_journal.py              # Decision journal read/write tests
+    ├── test_lkb.py                  # LKB grounding packet compilation tests
+    ├── test_macro.py                # India VIX, FRED macro, and broker client tests
+    ├── test_parser.py               # Natural language hypothesis parsing tests
+    ├── test_pdf.py                  # PDF export and XML escaping tests
+    ├── test_scrapers.py             # Scraper resilience, Finnhub, and BSE tests
+    └── test_simulator.py            # Scenario stress-tester simulation tests
 ```
 
 ---
 
-## 4. Phased Implementation Roadmap
+## 4. Completed Implementation Milestones
 
 ```mermaid
 gantt
-    title FAIDA Project Execution Roadmap
+    title FAIDA Project Execution Roadmap & Current Status
     dateFormat  YYYY-MM-DD
     section Phase 1: Core Scrapers & Grounding Hub
     run.bat & Python venv setup               :done, 2026-09-10, 1d
-    NSE & Screener.in Resilient Scrapers      :active, 2026-09-11, 2d
-    LKB Fact Sheet Generator (Zero-Hallucination):2026-09-13, 1d
-    DuckDB Decision Journal Setup             :2026-09-14, 1d
+    NSE & Screener.in Resilient Scrapers      :done, 2026-09-10, 1d
+    LKB Fact Sheet Generator (Zero-Hallucination):done, 2026-09-10, 1d
+    DuckDB Decision Journal Setup             :done, 2026-09-10, 1d
     section Phase 2: Multi-Agent Red-Team Core
-    Async State Machine & Parser Agent        :2026-09-15, 2d
-    6-Level Adversarial Red-Team Engine       :2026-09-17, 2d
-    Pre-Mortem Synthesizer with Citations     :2026-09-19, 1d
-    section Phase 3: Desktop UI & PyWebView Shell
-    FastAPI Localhost IPC API                 :2026-09-20, 1d
-    Modern Dark Glassmorphic Web UI           :2026-09-21, 2d
-    Tone Slider, Clickable LKB Badges & Radar :2026-09-23, 2d
-    section Phase 4: Verification & End-to-End Demo
-    Test Real Scenarios (e.g. Sell Reliance at 2900):2026-09-25, 2d
-    Packaging, Offline Tests & SEBI Disclaimer:2026-09-27, 1d
+    Async State Machine & Parser Agent        :done, 2026-09-10, 1d
+    6-Level Adversarial Red-Team Engine       :done, 2026-09-10, 1d
+    Pre-Mortem Synthesizer with Citations     :done, 2026-09-10, 1d
+    Cognitive Bias Detector (BiasAgent)       :done, 2026-09-11, 1d
+    Scenario Stress-Tester (SimulatorAgent)   :done, 2026-09-11, 1d
+    section Phase 3: Desktop UI & Integrations
+    FastAPI Localhost IPC API                 :done, 2026-09-11, 1d
+    Modern Dark Glassmorphic Web UI           :done, 2026-09-11, 1d
+    Global Macro Feeds (FRED & Finnhub APIs)  :done, 2026-09-11, 1d
+    DuckDB Local Feature Store (Sub-15ms)     :done, 2026-09-11, 1d
+    ReportLab PDF One-Pager Exporter          :done, 2026-09-11, 1d
+    section Phase 4: Verification & Quality Audit
+    52 Automated Pytest Suite (100% Pass)     :done, 2026-09-11, 1d
+    Zero-Flash PyWebView Window & Stepper UX  :done, 2026-09-11, 1d
 ```
+

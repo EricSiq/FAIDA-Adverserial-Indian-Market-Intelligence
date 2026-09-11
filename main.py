@@ -1,12 +1,33 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: main
+Description:
+    Primary Desktop Application Entry Point.
+    
+    Architectural Model:
+        - Asynchronous Backend Thread: Spawns the local FastAPI server in a background
+          daemon thread powered by Uvicorn.
+        - Zero-Flash Active Polling: Actively polls the local healthcheck endpoint
+          with low-latency retries rather than relying on arbitrary sleep durations.
+        - PyWebView Native Desktop Shell: Embeds a hardware-accelerated desktop window
+          with dark navy initial background (#0a0e17) to eliminate white launch flashes.
+        - Multi-Modal Runtime Flags:
+            --cli     : Direct terminal REPL for headless testing or automated shell scripts.
+            --browser : Headless backend server launching the standard system browser.
+            Default   : Native desktop GUI window.
+"""
+
 import sys
 import threading
 import time
 import webbrowser
+import urllib.request
 import uvicorn
 
 from backend.config import settings
 
 def run_fastapi():
+    """Starts the Uvicorn ASGI server hosting the FAIDA FastAPI backend."""
     uvicorn.run(
         "backend.app:app",
         host=settings.HOST,
@@ -14,8 +35,6 @@ def run_fastapi():
         log_level="warning",
         access_log=False
     )
-
-import urllib.request
 
 def wait_for_server(url: str, timeout_sec: float = 6.0) -> bool:
     """Polls server readiness endpoint with low-latency retries."""

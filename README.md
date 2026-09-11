@@ -55,13 +55,13 @@ Live volatility indicator embedded in the top navbar classifying market regimes:
 * **India VIX 18–24**: *Elevated Volatility* (Widen stop-loss thresholds; reduce position sizing).
 * **India VIX > 24**: *Extreme Panic / Stress* (High drawdown regime; capital preservation preferred).
 
-### 4. 📄 Exportable "Investment Pre-Mortem One-Pager" (Print / PDF)
-Generates an institutional-grade, clean one-page PDF summary for personal trade journals:
+### 4. 📄 Exportable "Investment Pre-Mortem One-Pager" (Native PDF / Print)
+Generates an institutional-grade, clean single-page PDF summary with zero emojis for trade journals and audits:
 * Proposed thesis, ticker, action, and target price.
 * Grounded LKB Evidence Fact Sheet with timestamped snapshot.
 * Cognitive Biases & Invalidation/Stop-Loss Levels.
-* **Mandatory Pre-Trade Invalidation Checklist** and physical signature line before placing orders on Zerodha, Groww, or Angel One.
-* *Example Template*: See [`docs/examples/sample_pre_mortem_one_pager.html`](file:///c:/Users/erics/Documents/AIML%20Projects/Adverserial%20Financial%20Agents/docs/examples/sample_pre_mortem_one_pager.html).
+* **Explainability References Layer**: Direct source links and citations for all scraped evidence (NSE Bhavcopy, Screener.in, BSE Filings, FRED Macro, Finnhub Catalysts).
+* *Example Template*: See [`docs/examples/sample_pre_mortem_one_pager.html`](file:///c:/Users/erics/Documents/AIML%20Projects/Adverserial%20Financial%20Agents/docs/examples/sample_pre_mortem_one_pager.html) and compiled PDF [`docs/examples/sample_pre_mortem_one_pager.pdf`](file:///c:/Users/erics/Documents/AIML%20Projects/Adverserial%20Financial%20Agents/docs/examples/sample_pre_mortem_one_pager.pdf).
 
 ### 5. 🎚️ 6-Level Adversarial Continuum Slider
 Calibrate the Red Team's personality from **Level 1 (100% Socratic Educator)** for beginners to **Level 6 (100% Forensic Quant / Roaster)** for experienced traders.
@@ -120,18 +120,19 @@ FAIDA_PROVIDER=ollama
 OLLAMA_MODEL=gemma4:e4b
 OLLAMA_URL=http://127.0.0.1:11434
 
-# Optional Cloud Acceleration
+# Optional Cloud Acceleration (Groq API)
 GROQ_API_KEY=your_free_groq_api_key_here
-GROQ_MODEL=llama-3.3-70b-versatile
-GEMINI_API_KEY=
+GROQ_MODEL=openai/gpt-oss-20b
 
-# Global Macro & Broker Gateway (Phase 2.3)
+# Global Macro & News APIs
 FRED_API_KEY=your_free_fred_api_key_here
+FINNHUB_API_KEY=your_free_finnhub_api_key_here
 BROKER_API_KEY=
 BROKER_NAME=upstox
 
-# Local Feature Store Cache (Phase 2.4)
-FEATURE_STORE_PATH=./data/feature_store.duckdb
+# Local Feature Store Cache & Decision Journal
+FEATURE_STORE_PATH=./data/faida_features.duckdb
+DB_PATH=./data/faida_journal.duckdb
 ```
 
 ---

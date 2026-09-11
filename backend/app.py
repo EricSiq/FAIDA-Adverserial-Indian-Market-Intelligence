@@ -1,3 +1,21 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.app
+Description:
+    FastAPI Application Server providing REST endpoints for the FAIDA desktop application.
+    
+    API Surface:
+        - POST /api/analyze: Runs the full 5-stage adversarial intelligence pipeline.
+        - GET  /api/macro/vix: Real-time India VIX index and market regime indicators.
+        - GET  /api/macro/global: Global macro snapshot (Brent crude, US 10Y yield, US Dollar Index).
+        - POST /api/simulate: Deterministic macroeconomic and sectoral stress-testing.
+        - GET  /api/history: List past audit decisions from DuckDB journal.
+        - GET  /api/history/{session_id}: Retrieve full audit record details.
+        - GET  /api/export/{session_id}: Institutional-grade PDF and HTML one-pager export.
+        - POST /api/cache/clear-expired: Maintenance endpoint to purge stale feature store records.
+        - GET/POST /api/config: Live configuration of model providers and API keys.
+"""
+
 import os
 import re
 import html

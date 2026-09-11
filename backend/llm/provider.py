@@ -1,10 +1,33 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.llm.provider
+Description:
+    Unified Multi-Tier Inference Gateway.
+    
+    Provides offline-first local execution via Ollama (gemma4:e4b) paired with an
+    automatic cloud fallback to Groq API with dynamic multi-model cascade and
+    deterministic rule-based fallback.
+    
+    Execution Hierarchy:
+        1. Local Ollama: Fast (<1.2s healthcheck) offline inference using local weights.
+        2. Groq Cloud Fallback: Ultra-low latency cloud inference with automatic cascade:
+           [GROQ_MODEL -> openai/gpt-oss-120b -> qwen/qwen3.6-27b -> openai/gpt-oss-20b -> llama-3.3-70b-versatile].
+        3. Reasoning Token Sanitization: Strips internal <think>...</think> blocks emitted by
+           preview reasoning models before sending responses to the UI.
+        4. Deterministic Fact-Grounded Fallback: Generates a structured counter-argument
+           directly from the LKB facts if all LLM backends are unreachable.
+"""
+
 import json
 import httpx
 from typing import Dict, Any, Optional
 from backend.config import settings
 
 class LLMProvider:
-    """Unified inference gateway supporting Local Ollama (gemma4:e4b) and Cloud Groq API."""
+    """
+    Unified inference provider managing model execution, automatic failovers,
+    and output sanitization.
+    """
 
     @classmethod
     def is_ollama_online(cls) -> bool:

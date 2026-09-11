@@ -51,6 +51,16 @@ Every scraped data point is converted into a normalized entry in the session's *
 
 ---
 
+### E. Global Macro & News Catalyst APIs (FRED & Finnhub)
+
+| Source Name | Raw Endpoint / Protocol | Data Extracted | LKB Tag Format |
+| :--- | :--- | :--- | :--- |
+| **Federal Reserve Economic Data (FRED)** | `api.stlouisfed.org/fred/series/observations` | Brent Crude (`DCOILBRENTEU`), US 10Y Yield (`DGS10`), Broad US Dollar Index (`DTWEXBGS`) | `[FRED: Brent ${price}, US 10Y {yield}%]` |
+| **Finnhub Financial API** | `finnhub.io/api/v1/company-news` & `/news` | Real-time ADR news (INFY, HDB, IBN, WIT, TTM) & global macro catalysts | `[FINNHUB_{SOURCE}: "{headline}"]` |
+
+
+---
+
 ## 3. Local Knowledge Base (LKB) JSON Schema
 
 Before any prompt is sent to the LLM, the FAIDA data ingestion hub aggregates all scraped metrics into a clean, normalized JSON table. This document represents the **ground-truth universe** for that session.

@@ -1,9 +1,28 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.agents.debater_agent
+Description:
+    Adversarial Red-Team / Devil's Advocate Agent for Indian Capital Markets.
+    
+    Key Responsibilities & Safety Guardrails:
+        1. Strict Grounding Constraint: Every counter-claim MUST cite verifiable facts
+           using [LKB-XX] tags. Zero hallucinated numbers or fabricated ratios are allowed.
+        2. Prompt Injection Defense: Untrusted user input is encapsulated inside strict XML
+           delimiters (<untrusted_user_hypothesis>) and treated as unverified data to be challenged,
+           preventing prompt jailbreaks or persona override attacks.
+        3. Tone Continuum: Dynamically adapts argument style across 6 distinct personas ranging
+           from gentle Socratic Educator to ruthless Quant Forensic Analyst.
+"""
+
 from typing import Dict, Any, List
 from backend.lkb.models import UserThesis, LKBPacket, ToneLevel, InvestmentAction
 from backend.llm.provider import LLMProvider
 
 class DebaterAgent:
-    """The Red Team / Devil's Advocate Agent for Indian Capital Markets."""
+    """
+    Mounts a rigorous, zero-hallucination adversarial challenge against the user's investment position.
+    Forces retail investors to confront the bear case, valuation gravity, and liquidity realities.
+    """
 
     TONE_INSTRUCTIONS = {
         ToneLevel.SOCRATIC_EDUCATOR: (

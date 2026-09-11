@@ -1,17 +1,35 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.agents.simulator_agent
+Description:
+    Adversarial Stress-Testing Engine that runs deterministic "What-If" macroeconomic
+    and sectoral shock simulations against an Indian investment thesis.
+    
+    Supported Stress Scenarios:
+        1. CRUDE_SURGE: Brent crude spikes to $95-$100/bbl (Current Account Deficit, raw material margin squeeze).
+        2. RBI_RATE_HIKE: Unexpected 25 bps repo rate hike (NIM compression, equity multiple rerating, demand delay).
+        3. INR_DEPRECIATION: USD/INR weakens past ₹86.50 (imported inflation vs IT/pharma export tailwinds).
+        4. MARGIN_COMPRESSION: 250 bps operating margin drop (operating deleverage and forward P/E expansion).
+"""
+
 from typing import Dict, Any
 from pydantic import BaseModel
 
 class ScenarioResult(BaseModel):
+    """Result of a deterministic macroeconomic stress-test simulation."""
     scenario_id: str
     scenario_title: str
     symbol: str
-    estimated_impact: str  # e.g. "HIGH NEGATIVE (-6% to -10% EPS impact)"
+    estimated_impact: str  # e.g. "HIGH NEGATIVE (-7% to -12% Operating Profit)"
     mechanism: str
     red_team_warning: str
     hedging_takeaway: str
 
 class SimulatorAgent:
-    """Stress-tests investment theses against macroeconomic and sector shocks."""
+    """
+    Stress-tests investment positions against external shocks using sector-calibrated
+    elasticity models tailored to the Indian macroeconomic environment.
+    """
 
     SECTOR_MAPPINGS = {
         "RELIANCE": {"sector": "ENERGY_DIVERSIFIED", "crude_sensitivity": "MIXED", "fx_sensitivity": "POSITIVE_USD"},

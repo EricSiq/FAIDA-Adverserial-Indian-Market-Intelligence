@@ -1,10 +1,28 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.agents.parser_agent
+Description:
+    Natural Language Hypothesis Parsing Engine.
+    
+    Responsibilities:
+        1. Deconstructs raw user input queries into a structured UserThesis Pydantic model.
+        2. Resolves colloquial Indian brand and company names (e.g. "RIL", "Tata Motors", "Airtel",
+           "HDFC Bank", "Asian Paints", "Bajaj Finance") into official NSE ticker symbols.
+        3. Identifies investor action intent: BUY, SELL, or HOLD using affirmative keyword matching.
+        4. Extracts target entry/exit prices using currency patterns (₹, Rs., INR, @) or numerals.
+        5. Validates and maps adversarial tone levels (1-6) on the Socratic-to-Forensic continuum.
+"""
+
 import re
 from typing import Optional
 from backend.lkb.models import UserThesis, InvestmentAction, AssetClass, ToneLevel
 from backend.llm.provider import LLMProvider
 
 class ParserAgent:
-    """Deconstructs user natural language inputs into a structured investment hypothesis."""
+    """
+    Deconstructs unstructured user inputs into an actionable, strongly-typed UserThesis.
+    Guarantees entity normalization across the top 50+ actively traded Indian equities.
+    """
 
     KNOWN_SYMBOLS = {
         "RELIANCE": "RELIANCE", "RIL": "RELIANCE",

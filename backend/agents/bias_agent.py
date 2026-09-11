@@ -1,8 +1,24 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.agents.bias_agent
+Description:
+    Behavioral Finance Audit Engine detecting cognitive biases and psychological traps
+    in retail investor investment hypotheses.
+    
+    Identifies 5 primary Indian retail traps:
+        1. Anchoring Bias (historical highs / 52-week peak fixation)
+        2. Loss Aversion & Sunk Cost Fallacy (averaging down, refusal to take paper losses)
+        3. FOMO & Recency Bias (chasing price velocity without delivery volume)
+        4. Lottery Ticket & Turnaround Fallacy (penny stocks / turnaround narrative traps)
+        5. Social Proof & Confirmation Bias (Telegram/WhatsApp tips, unverified recommendations)
+"""
+
 from typing import List, Dict, Any
 import re
 from pydantic import BaseModel
 
 class DetectedBias(BaseModel):
+    """Structured representation of a detected psychological bias."""
     bias_name: str
     severity: str  # HIGH, MEDIUM, LOW
     matched_phrase: str
@@ -10,7 +26,10 @@ class DetectedBias(BaseModel):
     reframing_advice: str
 
 class BiasAgent:
-    """Detects cognitive biases and behavioral traps in retail investor theses."""
+    """
+    Scans unstructured investor reasoning against established behavioral finance heuristics.
+    Provides structured debiasing reframing prompts designed to interrupt impulsive decision cycles.
+    """
 
     BIAS_RULES = [
         {

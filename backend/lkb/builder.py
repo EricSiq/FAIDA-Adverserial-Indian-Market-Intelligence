@@ -1,3 +1,23 @@
+"""
+FAIDA: Financial Adversarial Indian Data Agents
+Module: backend.lkb.builder
+Description:
+    Local Knowledge Base (LKB) Fact Compiler.
+    
+    Acts as the single source of truth for the adversarial swarm by consolidating multi-source
+    market signals into a deterministic, strongly-typed LKBPacket.
+    
+    Data Integration Points:
+        1. YFinanceClient: 52-week extremes, RSI(14), EMA-20, EMA-50, EMA-200.
+        2. ScreenerClient: P/E, ROCE, Promoter Pledging, 3Y CFO/PAT Accrual Ratio, Audit Red Flags.
+        3. NSEClient: Live exchange quote and Delivery-to-Traded-Quantity percentage.
+        4. BSEClient: Regulatory disclosures, board meeting outcomes, and corporate governance alerts.
+        5. MacroClient: India VIX regime label, 10-Year Indian Sovereign G-Sec yield baseline.
+        6. FREDClient: St. Louis Fed global macro drivers (Brent Crude, US 10Y Yield, DXY).
+        7. FinnhubClient: Real-time company news, ADR developments, and sentiment catalysts.
+        8. FeatureStore (DuckDB): TTL-governed local caching for sub-second offline-first retrieval.
+"""
+
 from typing import Dict, Any, List, Optional
 import uuid
 from datetime import datetime
@@ -14,7 +34,10 @@ from backend.scrapers.nse_client import NSEClient
 from backend.db.feature_store import FeatureStore
 
 class LKBBuilder:
-    """Consolidates scraped Indian market signals into a deterministic Local Knowledge Base (LKB)."""
+    """
+    Consolidates heterogeneous, multi-source Indian financial data into a standardized,
+    verifiable Local Knowledge Base (LKB) packet with discrete [LKB-XX] fact identifiers.
+    """
 
     def __init__(self, use_cache: bool = True, feature_store: Optional[FeatureStore] = None):
         self.nse_client = NSEClient()
