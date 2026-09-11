@@ -47,3 +47,12 @@ def test_lkb_builder_generation():
     assert any("India VIX" in m for m in metrics)
     assert any("G-Sec Yield" in m for m in metrics)
 
+def test_lkb_builder_query_targeted_context():
+    from backend.lkb.builder import LKBBuilder
+    builder = LKBBuilder()
+    packet = builder.build_equity_packet("RELIANCE", "NSE", user_query="Selling because crude prices are volatile")
+    metrics = [f.metric for f in packet.facts]
+    assert any("Brent Crude" in m for m in metrics)
+    assert packet.metadata.get("query_context_applied") is True
+
+

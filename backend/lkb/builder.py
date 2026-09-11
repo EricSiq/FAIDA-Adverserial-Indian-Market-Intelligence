@@ -31,12 +31,14 @@ from backend.lkb.models import (
 from backend.scrapers.yfinance_client import YFinanceClient
 from backend.scrapers.screener_client import ScreenerClient
 from backend.scrapers.nse_client import NSEClient
+from backend.scrapers.web_search_client import WebSearchClient
 from backend.db.feature_store import FeatureStore
 
 class LKBBuilder:
     """
     Consolidates heterogeneous, multi-source Indian financial data into a standardized,
     verifiable Local Knowledge Base (LKB) packet with discrete [LKB-XX] fact identifiers.
+    Enriches generic company data with deep, query-aware web intelligence and macro transmission facts.
     """
 
     def __init__(self, use_cache: bool = True, feature_store: Optional[FeatureStore] = None):
@@ -44,10 +46,17 @@ class LKBBuilder:
         self.use_cache = use_cache
         self.feature_store = feature_store or (FeatureStore() if use_cache else None)
 
-    def build_equity_packet(self, symbol: str, exchange: str = "NSE", force_refresh: bool = False) -> LKBPacket:
+    def build_equity_packet(
+        self,
+        symbol: str,
+        exchange: str = "NSE",
+        user_query: Optional[str] = None,
+        force_refresh: bool = False
+    ) -> LKBPacket:
         clean_symbol = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
         
-        if self.use_cache and not force_refresh and self.feature_store:
+        # Check feature store cache for generic packet when no specific query overrides
+        if self.use_cache and not force_refresh and not user_query and self.feature_store:
             cached = self.feature_store.get(clean_symbol, "EQUITY_PACKET")
             if cached:
                 try:
@@ -67,6 +76,7 @@ class LKBBuilder:
 
         # 3. Fetch Live Quote & Delivery from NSE
         nse_data = self.nse_client.get_quote(clean_symbol) if exchange.upper() == "NSE" else None
+        company_name = screener_data.get("company_name") or (nse_data.get("company_name") if nse_data else clean_symbol)
 
         # Determine best current price
         current_price = 0.0
@@ -167,7 +177,7 @@ class LKBBuilder:
             ))
             fact_idx += 1
 
-        # Fact: Delivery Percentage & Baseline
+        # Fact: Delivery Percentage & Conviction
         if nse_data and nse_data.get("delivery_to_traded_quantity") is not None:
             deliv_pct = round(float(nse_data["delivery_to_traded_quantity"]), 2)
             conviction = "High Institutional Accumulation (>45%)" if deliv_pct >= 45 else ("Speculative Intraday Churn (<25%)" if deliv_pct < 25 else "Moderate Turnover")
@@ -302,21 +312,100 @@ class LKBBuilder:
         ))
         fact_idx += 1
 
-        # Fact: Finnhub Real-Time News & Global Sentiment
-        from backend.scrapers.finnhub_client import FinnhubClient
-        news_items = FinnhubClient.get_company_news(clean_symbol)
-        if news_items:
-            for item in news_items[:2]:
+        # ---------------------------------------------------------------------
+        # Query-Aware Contextual Facts: Specific to Investor's Stated Rationale
+        # ---------------------------------------------------------------------
+        query_upper = (user_query or "").upper()
+
+        # Contextual Fact: Crude Oil / Energy Sensitivity
+        if any(term in query_upper for term in ["CRUDE", "OIL", "BRENT", "PETROL", "DIESEL", "FUEL", "REFIN", "OPEC"]) or clean_symbol in ["RELIANCE", "ONGC", "BPCL", "IOC", "HPCL"]:
+            from backend.scrapers.fred_client import FREDClient
+            brent_obs = FREDClient.get_series_observation("BRENT_CRUDE")
+            brent_val = brent_obs.get("value", 82.50)
+            facts.append(LKBFact(
+                id=f"LKB-{fact_idx:02d}",
+                category=LKBFactCategory.MACRO,
+                source="FRED_BRENT",
+                metric="Brent Crude Oil Benchmark Spot",
+                value=f"${brent_val:.2f}/bbl",
+                unit="USD",
+                context="Directly impacts investor thesis on energy/crude volatility. Affects gross refining margins (GRMs), petrochemical spreads, and working capital requirements."
+            ))
+            fact_idx += 1
+
+        # Contextual Fact: Dividend Yield Spread vs Sovereign Risk-Free Rate
+        if any(term in query_upper for term in ["DIVIDEND", "YIELD", "PAYOUT", "SAFE", "DEFENSIVE", "INCOME"]):
+            div_yield = ratios.get("Dividend Yield") or yf_data.get("dividend_yield")
+            if div_yield is not None:
+                spread = round(float(div_yield) - float(gsec_10y), 2)
                 facts.append(LKBFact(
                     id=f"LKB-{fact_idx:02d}",
-                    category=LKBFactCategory.NEWS,
-                    source=f"FINNHUB_{item.get('source', 'GLOBAL').upper().replace(' ', '_')}",
-                    metric="Market & Company News Catalyst",
-                    value=item.get("headline", "Market News Catalyst"),
-                    unit="",
-                    context=item.get("summary", "")[:240]
+                    category=LKBFactCategory.VALUATION,
+                    source="SCREENER_DIVIDEND",
+                    metric="Equity Dividend Yield vs Sovereign Spread",
+                    value=f"{div_yield}% (Spread: {spread}%)",
+                    unit="%",
+                    context=f"Investor seeks dividend safety. Stock yields {div_yield}% vs 10Y Indian Sovereign G-Sec at {gsec_10y}%, generating a net spread of {spread}%."
                 ))
                 fact_idx += 1
+
+        # Contextual Fact: Currency & US Dollar Transmission
+        if any(term in query_upper for term in ["DOLLAR", "USD", "INR", "RUPEE", "CURRENCY", "EXPORT", "FOREX"]) or clean_symbol in ["TCS", "INFY", "WIPRO", "HCLTECH", "TECHM", "SUNPHARMA", "DRREDDY", "CIPLA"]:
+            from backend.scrapers.fred_client import FREDClient
+            dxy_obs = FREDClient.get_series_observation("US_DOLLAR_INDEX")
+            dxy_val = dxy_obs.get("value", 104.20)
+            facts.append(LKBFact(
+                id=f"LKB-{fact_idx:02d}",
+                category=LKBFactCategory.MACRO,
+                source="FRED_DXY",
+                metric="US Dollar Index (DXY) & Currency Transmission",
+                value=f"{dxy_val}",
+                unit="Points",
+                context="Measures global dollar strength. A strong dollar index drives INR depreciation pressure, raising imported input costs while acting as a hedge for export revenue."
+            ))
+            fact_idx += 1
+
+        # Contextual Fact: Commercial Vehicle / Auto Expansion Dynamics
+        if any(term in query_upper for term in ["COMMERCIAL VEHICLE", "CV", "AUTO", "TRUCK", "BUS", "EV", "EXPANSION", "FLEET"]) and clean_symbol in ["TATAMOTORS", "MARUTI", "M&M", "ASHOKLEY", "EICHERMOT"]:
+            facts.append(LKBFact(
+                id=f"LKB-{fact_idx:02d}",
+                category=LKBFactCategory.TECHNICAL,
+                source="INDUSTRY_AUTO_MONITOR",
+                metric="Commercial Vehicle & Auto Cyclicality Dynamics",
+                value="High Cyclical Beta",
+                unit="",
+                context="CV and auto expansion is heavily tied to domestic infrastructure freight volume, diesel inflation, and fleet financing interest rates."
+            ))
+            fact_idx += 1
+
+        # ---------------------------------------------------------------------
+        # Deep Real-Time Web Search & Query-Targeted News Catalysts
+        # ---------------------------------------------------------------------
+        web_articles = WebSearchClient.search_query_context(
+            clean_symbol,
+            company_name=company_name,
+            user_query=user_query,
+            limit=3
+        )
+
+        for art in web_articles:
+            matched = art.get("is_query_matched", False)
+            metric_title = "Query-Targeted News Catalyst" if matched else "Market & Company News Catalyst"
+            src_clean = art.get("source", "Web").upper().replace(" ", "_")[:18]
+            snippet = art.get("snippet", "")
+            pub_date = art.get("published", "")
+            date_ctx = f" (Published: {pub_date})" if pub_date else ""
+            
+            facts.append(LKBFact(
+                id=f"LKB-{fact_idx:02d}",
+                category=LKBFactCategory.NEWS,
+                source=f"NEWS_{src_clean}",
+                metric=metric_title,
+                value=art.get("title", "News Catalyst")[:130],
+                unit="",
+                context=f"{snippet[:240]}{date_ctx}"
+            ))
+            fact_idx += 1
 
         packet = LKBPacket(
             session_id=session_id,
@@ -325,13 +414,14 @@ class LKBBuilder:
             asset_class=AssetClass.EQUITY,
             facts=facts,
             metadata={
-                "company_name": screener_data.get("company_name") or (nse_data.get("company_name") if nse_data else clean_symbol),
+                "company_name": company_name,
                 "has_nse_live": nse_data is not None,
-                "red_flag_count": len(red_flags)
+                "red_flag_count": len(red_flags),
+                "query_context_applied": bool(user_query)
             }
         )
 
-        if self.use_cache and self.feature_store:
+        if self.use_cache and self.feature_store and not user_query:
             try:
                 self.feature_store.set(clean_symbol, "EQUITY_PACKET", packet.model_dump(), ttl_seconds=900)
             except Exception:

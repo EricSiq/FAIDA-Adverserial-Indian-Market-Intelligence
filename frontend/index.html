@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FAIDA - Financial Adversarial Indian Data Agents</title>
-  <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="js/marked.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css?v=3.0">
 </head>
 <body>
   <div class="app-container">
@@ -17,7 +18,7 @@
         <div class="logo-mark">
           <span class="logo-symbol">₹</span>
           <div class="logo-text">
-            <h1>FAIDA <span class="logo-badge">RED-TEAM</span></h1>
+            <h1>FAIDA <span class="logo-badge">TERMINAL</span></h1>
             <p class="tagline">Financial Adversarial Indian Data Agents</p>
           </div>
         </div>
@@ -52,40 +53,192 @@
           <span id="provider-label">Ollama: gemma4:e4b</span>
         </button>
         <button id="new-thesis-btn" class="pill-btn secondary" title="Clear Workspace & Start New Thesis (Ctrl+N)">
-          <span>✨ New Thesis</span>
+          <span>+ New Thesis</span>
         </button>
         <button id="history-btn" class="pill-btn secondary" title="View Past Decisions Journal">
-          <span>📜 Journal</span>
+          <span>Journal</span>
         </button>
       </div>
     </header>
 
-    <!-- Global Macro Telemetry Ribbon (FRED, India VIX & CCIL) -->
+    <!-- Global Macro Telemetry Ribbon (Infinite Looping Ticker) -->
     <div class="macro-ribbon" id="macro-ribbon">
-      <div class="macro-ribbon-inner">
-        <div class="macro-item" title="Brent Crude Oil Spot (USD / Barrel via FRED)">
-          <span class="macro-label">🛢️ BRENT CRUDE:</span>
-          <span class="macro-val" id="macro-brent">--</span>
-        </div>
-        <div class="macro-divider"></div>
-        <div class="macro-item" title="US 10-Year Treasury Constant Maturity Yield via FRED">
-          <span class="macro-label">🇺🇸 US 10Y:</span>
-          <span class="macro-val" id="macro-us10y">--</span>
-        </div>
-        <div class="macro-divider"></div>
-        <div class="macro-item" title="Broad US Dollar Index (DXY) via FRED">
-          <span class="macro-label">💵 DXY:</span>
-          <span class="macro-val" id="macro-dxy">--</span>
-        </div>
-        <div class="macro-divider"></div>
-        <div class="macro-item" title="India VIX Volatility Weather Gauge">
-          <span class="macro-label">🇮🇳 INDIA VIX:</span>
-          <span class="macro-val" id="macro-vix">--</span>
-        </div>
-        <div class="macro-divider"></div>
-        <div class="macro-item" title="India 10-Year Sovereign Benchmark G-Sec Yield">
-          <span class="macro-label">🏛️ G-SEC 10Y:</span>
-          <span class="macro-val" id="macro-gsec">7.08%</span>
+      <div class="ticker-badge">
+        <span class="ticker-dot"></span>
+        <span class="ticker-badge-text">TELEMETRY</span>
+      </div>
+      <div class="macro-ticker-wrapper">
+        <div class="macro-ticker-track">
+          <!-- Group 1 -->
+          <div class="ticker-group">
+            <div class="macro-item" title="Nifty 50 Benchmark Index">
+              <span class="macro-label">NIFTY 50:</span>
+              <span class="macro-val">25,385.40</span>
+              <span class="ticker-change up">+0.38%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="BSE Sensex Benchmark Index">
+              <span class="macro-label">SENSEX:</span>
+              <span class="macro-val">82,925.10</span>
+              <span class="ticker-change up">+0.35%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Nifty Bank Sectoral Index">
+              <span class="macro-label">BANK NIFTY:</span>
+              <span class="macro-val">51,840.65</span>
+              <span class="ticker-change down">-0.14%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="India VIX Volatility Weather Gauge">
+              <span class="macro-label">INDIA VIX:</span>
+              <span class="macro-val macro-vix-val" id="macro-vix">12.28 (Low Vol)</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Brent Crude Oil Spot (USD / Barrel via FRED)">
+              <span class="macro-label">BRENT CRUDE:</span>
+              <span class="macro-val macro-brent-val" id="macro-brent">$78.45</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="USD / Indian Rupee Spot Rate">
+              <span class="macro-label">USD/INR:</span>
+              <span class="macro-val">83.94</span>
+              <span class="ticker-change neutral">0.00%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="US 10-Year Treasury Constant Maturity Yield via FRED">
+              <span class="macro-label">US 10Y:</span>
+              <span class="macro-val macro-us10y-val" id="macro-us10y">4.28%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Broad US Dollar Index (DXY) via FRED">
+              <span class="macro-label">DXY:</span>
+              <span class="macro-val macro-dxy-val" id="macro-dxy">104.15</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="India 10-Year Sovereign Benchmark G-Sec Yield">
+              <span class="macro-label">G-SEC 10Y:</span>
+              <span class="macro-val" id="macro-gsec">7.08%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="MCX Gold Spot (₹ / 10g)">
+              <span class="macro-label">MCX GOLD:</span>
+              <span class="macro-val">₹74,850</span>
+              <span class="ticker-change up">+0.42%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="MCX Silver Spot (₹ / 1kg)">
+              <span class="macro-label">MCX SILVER:</span>
+              <span class="macro-val">₹89,200</span>
+              <span class="ticker-change up">+0.85%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="RBI Monetary Policy Repo Rate">
+              <span class="macro-label">RBI REPO:</span>
+              <span class="macro-val">6.50%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Nifty IT Sectoral Index">
+              <span class="macro-label">NIFTY IT:</span>
+              <span class="macro-val">42,110.80</span>
+              <span class="ticker-change up">+1.12%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Foreign Institutional Investors Net Flow (D-1)">
+              <span class="macro-label">FII NET:</span>
+              <span class="macro-val up">+₹1,245 Cr</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Domestic Institutional Investors Net Flow (D-1)">
+              <span class="macro-label">DII NET:</span>
+              <span class="macro-val up">+₹2,180 Cr</span>
+            </div>
+            <div class="macro-divider"></div>
+          </div>
+          <!-- Group 2 (Duplicate for Seamless Loop) -->
+          <div class="ticker-group" aria-hidden="true">
+            <div class="macro-item" title="Nifty 50 Benchmark Index">
+              <span class="macro-label">NIFTY 50:</span>
+              <span class="macro-val">25,385.40</span>
+              <span class="ticker-change up">+0.38%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="BSE Sensex Benchmark Index">
+              <span class="macro-label">SENSEX:</span>
+              <span class="macro-val">82,925.10</span>
+              <span class="ticker-change up">+0.35%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Nifty Bank Sectoral Index">
+              <span class="macro-label">BANK NIFTY:</span>
+              <span class="macro-val">51,840.65</span>
+              <span class="ticker-change down">-0.14%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="India VIX Volatility Weather Gauge">
+              <span class="macro-label">INDIA VIX:</span>
+              <span class="macro-val macro-vix-val">12.28 (Low Vol)</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Brent Crude Oil Spot (USD / Barrel via FRED)">
+              <span class="macro-label">BRENT CRUDE:</span>
+              <span class="macro-val macro-brent-val">$78.45</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="USD / Indian Rupee Spot Rate">
+              <span class="macro-label">USD/INR:</span>
+              <span class="macro-val">83.94</span>
+              <span class="ticker-change neutral">0.00%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="US 10-Year Treasury Constant Maturity Yield via FRED">
+              <span class="macro-label">US 10Y:</span>
+              <span class="macro-val macro-us10y-val">4.28%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Broad US Dollar Index (DXY) via FRED">
+              <span class="macro-label">DXY:</span>
+              <span class="macro-val macro-dxy-val">104.15</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="India 10-Year Sovereign Benchmark G-Sec Yield">
+              <span class="macro-label">G-SEC 10Y:</span>
+              <span class="macro-val">7.08%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="MCX Gold Spot (₹ / 10g)">
+              <span class="macro-label">MCX GOLD:</span>
+              <span class="macro-val">₹74,850</span>
+              <span class="ticker-change up">+0.42%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="MCX Silver Spot (₹ / 1kg)">
+              <span class="macro-label">MCX SILVER:</span>
+              <span class="macro-val">₹89,200</span>
+              <span class="ticker-change up">+0.85%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="RBI Monetary Policy Repo Rate">
+              <span class="macro-label">RBI REPO:</span>
+              <span class="macro-val">6.50%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Nifty IT Sectoral Index">
+              <span class="macro-label">NIFTY IT:</span>
+              <span class="macro-val">42,110.80</span>
+              <span class="ticker-change up">+1.12%</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Foreign Institutional Investors Net Flow (D-1)">
+              <span class="macro-label">FII NET:</span>
+              <span class="macro-val up">+₹1,245 Cr</span>
+            </div>
+            <div class="macro-divider"></div>
+            <div class="macro-item" title="Domestic Institutional Investors Net Flow (D-1)">
+              <span class="macro-label">DII NET:</span>
+              <span class="macro-val up">+₹2,180 Cr</span>
+            </div>
+            <div class="macro-divider"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -97,19 +250,24 @@
         <div class="chat-history" id="chat-stream">
           <!-- Welcome Card -->
           <div class="welcome-card" id="welcome-card">
-            <div class="welcome-icon">🛡️</div>
-            <h2>Don't invest on confirmation bias.</h2>
-            <p>Tell FAIDA your proposed Indian market investment (e.g. stock, target price, buy/sell action). The agent swarm will scrape live market data, build a grounded fact sheet, and rigorously stress-test your thesis.</p>
+            <div class="welcome-icon">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-red); margin: 0 auto;">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+            </div>
+            <h2>Challenge Confirmation Bias</h2>
+            <p>Enter an Indian market investment hypothesis (symbol, target price, buy/sell action). The agent swarm scrapes live market data, constructs a deterministic fact sheet, and rigorously red-teams your thesis.</p>
             
             <div class="suggestion-chips">
               <button class="chip" data-query="Thinking of selling Reliance at ₹2,900 because crude prices are volatile">
-                📉 Sell Reliance at ₹2,900
+                Sell Reliance at ₹2,900 (Crude Volatility Headwinds)
               </button>
               <button class="chip" data-query="Want to buy Tata Motors at ₹980 anticipating commercial vehicle expansion">
-                📈 Buy Tata Motors at ₹980
+                Buy Tata Motors at ₹980 (Commercial Vehicle Expansion)
               </button>
               <button class="chip" data-query="Planning to buy ITC at ₹430 for safe dividend yield">
-                🪙 Buy ITC at ₹430
+                Buy ITC at ₹430 (Defensive Dividend Yield Thesis)
               </button>
             </div>
           </div>
@@ -229,7 +387,7 @@
     <div id="history-modal" class="modal hidden">
       <div class="modal-content history-modal-content">
         <div class="modal-header">
-          <h3>📜 Past Investment Theses Journal</h3>
+          <h3>Past Investment Theses Journal</h3>
           <button id="close-history-btn" class="close-btn">&times;</button>
         </div>
         <div class="modal-body">
@@ -244,7 +402,7 @@
     <!-- Permanent SEBI Educational Disclaimer Footer -->
     <footer class="app-footer">
       <div class="disclaimer-content">
-        <span class="alert-icon">⚖️</span>
+        <span class="disclaimer-badge">NOTICE</span>
         <p>
           <strong>SEBI Educational & Research Notice:</strong> FAIDA (*Financial Adversarial Indian Data Agents*) is an educational research and pre-mortem risk-awareness tool powered by public market data. It intentionally presents counter-arguments to test investor theses and does <strong>NOT</strong> provide buy/sell recommendations or SEBI-registered financial advisory services. All investments in Indian securities and commodities are subject to market risks.
         </p>
@@ -252,6 +410,6 @@
     </footer>
   </div>
 
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=3.0"></script>
 </body>
 </html>

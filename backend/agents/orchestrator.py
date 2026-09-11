@@ -69,7 +69,11 @@ class SwarmOrchestrator:
         # -------------------------------------------------------------------------
         # Step 2: Ingest Data & Compile Grounded Local Knowledge Base (LKB)
         # -------------------------------------------------------------------------
-        lkb_packet = self.lkb_builder.build_equity_packet(thesis.symbol, exchange=thesis.exchange)
+        lkb_packet = self.lkb_builder.build_equity_packet(
+            thesis.symbol,
+            exchange=thesis.exchange,
+            user_query=user_query
+        )
 
         # -------------------------------------------------------------------------
         # Step 3: Mount Adversarial Red-Team Counter-Thesis (Strict Grounding)

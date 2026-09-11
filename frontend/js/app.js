@@ -163,30 +163,35 @@ document.addEventListener("DOMContentLoaded", () => {
         const dot = document.getElementById("vix-dot");
         const label = document.getElementById("vix-label");
         const pill = document.getElementById("vix-pill");
-        const macroVix = document.getElementById("macro-vix");
         if (dot && label && pill) {
           dot.style.backgroundColor = vixRes.color || "var(--accent-green)";
           dot.style.boxShadow = `0 0 6px ${vixRes.color || "var(--accent-green)"}`;
           label.textContent = `India VIX: ${vixRes.vix_value}`;
           pill.title = `${vixRes.regime_label}: ${vixRes.description}`;
         }
-        if (macroVix) {
-          macroVix.textContent = `${vixRes.vix_value} (${vixRes.regime_label || "Normal"})`;
-        }
+        document.querySelectorAll(".macro-vix-val").forEach((el) => {
+          el.textContent = `${vixRes.vix_value} (${vixRes.regime_label || "Normal"})`;
+        });
       }
 
       if (macroRes) {
-        const brentEl = document.getElementById("macro-brent");
-        const us10yEl = document.getElementById("macro-us10y");
-        const dxyEl = document.getElementById("macro-dxy");
-        if (brentEl && macroRes.brent_crude_usd) {
-          brentEl.textContent = `$${macroRes.brent_crude_usd.toFixed(2)}`;
+        if (macroRes.brent_crude_usd) {
+          const valStr = `$${macroRes.brent_crude_usd.toFixed(2)}`;
+          document.querySelectorAll(".macro-brent-val").forEach((el) => {
+            el.textContent = valStr;
+          });
         }
-        if (us10yEl && macroRes.us_10y_yield_pct) {
-          us10yEl.textContent = `${macroRes.us_10y_yield_pct.toFixed(2)}%`;
+        if (macroRes.us_10y_yield_pct) {
+          const valStr = `${macroRes.us_10y_yield_pct.toFixed(2)}%`;
+          document.querySelectorAll(".macro-us10y-val").forEach((el) => {
+            el.textContent = valStr;
+          });
         }
-        if (dxyEl && macroRes.us_dollar_index) {
-          dxyEl.textContent = `${macroRes.us_dollar_index.toFixed(1)}`;
+        if (macroRes.us_dollar_index) {
+          const valStr = `${macroRes.us_dollar_index.toFixed(1)}`;
+          document.querySelectorAll(".macro-dxy-val").forEach((el) => {
+            el.textContent = valStr;
+          });
         }
       }
     } catch (err) {
@@ -331,7 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
     card.id = "active-stepper";
     card.innerHTML = `
       <div class="stepper-header">
-        <span>⚡ ADVERSARIAL SWARM TELEMETRY</span>
+        <span>ADVERSARIAL SWARM TELEMETRY</span>
         <span style="font-size: 11px; color: var(--accent-blue);">Live Market Ingestion Active</span>
       </div>
       <div class="stepper-steps-list">
@@ -411,18 +416,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function appendUserBubble(text) {
     const div = document.createElement("div");
     div.className = "user-thesis-bubble";
-    div.innerHTML = `<strong>Your Proposed Thesis:</strong> ${escapeHtml(text)}`;
+    div.innerHTML = `<strong>Your Proposed Thesis:</strong> ${escapeHtml(stripEmojis(text))}`;
     chatStream.appendChild(div);
-    chatStream.scrollTop = chatStream.scrollHeight;
+    requestAnimationFrame(() => {
+      chatStream.scrollTop = chatStream.scrollHeight;
+    });
   }
 
   function appendErrorBubble(text) {
     const div = document.createElement("div");
     div.className = "adversarial-card";
     div.style.borderLeftColor = "#ef4444";
-    div.innerHTML = `<p style="color: #ef4444;">${escapeHtml(text)}</p>`;
+    div.innerHTML = `<p style="color: #ef4444;">${escapeHtml(stripEmojis(text))}</p>`;
     chatStream.appendChild(div);
-    chatStream.scrollTop = chatStream.scrollHeight;
+    requestAnimationFrame(() => {
+      chatStream.scrollTop = chatStream.scrollHeight;
+    });
   }
 
   function renderAnalysisResponse(data) {
@@ -430,41 +439,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.createElement("div");
     container.className = "analysis-turn";
 
-    // Format LLM text with clickable [LKB-XX] badges
-    let formattedDebate = escapeHtml(data.adversarial_counter_thesis);
-    formattedDebate = formattedDebate.replace(/\[(LKB-\d{2})\]/g, (match, id) => {
-      return `<span class="citation-badge" data-fact-id="${id}">[${id}]</span>`;
-    });
+    // Format LLM text with Markdown rendering, citation badges, and clean corporate styling
+    const formattedDebate = formatMarkdown(data.adversarial_counter_thesis);
 
-    // Cognitive Biases HTML
+    // Cognitive Biases HTML (Zero Emojis, Minimalist Corporate)
     let biasesHtml = "";
     if (pm.detected_biases && pm.detected_biases.length > 0) {
       biasesHtml = `
         <div class="bias-section">
-          <h4>⚠️ Cognitive Biases & Behavioral Traps Detected in Your Rationale:</h4>
+          <h4>Cognitive Biases & Behavioral Traps Detected in Your Rationale:</h4>
           ${pm.detected_biases.map(b => `
             <div class="bias-card">
-              <div class="bias-title">${escapeHtml(b.bias_name)} (${escapeHtml(b.severity)} Severity)</div>
-              <p class="bias-trap"><strong>The Trap:</strong> ${escapeHtml(b.psychological_trap)}</p>
-              <p class="bias-reframing"><strong>💡 Reframing Check:</strong> ${escapeHtml(b.reframing_advice)}</p>
+              <div class="bias-title">${escapeHtml(stripEmojis(b.bias_name))} (${escapeHtml(b.severity)} Severity)</div>
+              <p class="bias-trap"><strong>The Trap:</strong> ${escapeHtml(stripEmojis(b.psychological_trap))}</p>
+              <p class="bias-reframing"><strong>Reframing Check:</strong> ${escapeHtml(stripEmojis(b.reframing_advice))}</p>
             </div>
           `).join("")}
         </div>
       `;
     }
 
-    // Macro Shock Simulator HTML
+    // Macro Shock Simulator HTML (Zero Emojis, Corporate Labels)
     const sym = data.thesis ? data.thesis.symbol : "EQUITY";
     const simulatorHtml = `
       <div class="simulator-card" id="sim-card-${data.session_id}">
         <div class="simulator-header">
-          <span>⚡ Interactive Macro Shock Simulator ("What-If?" Stress Tester)</span>
+          <span>Interactive Macro Shock Simulator (Stress Tester)</span>
         </div>
         <div class="sim-buttons">
-          <button class="sim-btn" data-scenario="CRUDE_SURGE" data-sym="${escapeHtml(sym)}">🛢️ Crude Spikes $95+</button>
-          <button class="sim-btn" data-scenario="RBI_RATE_HIKE" data-sym="${escapeHtml(sym)}">🏦 RBI Hikes Repo +25bps</button>
-          <button class="sim-btn" data-scenario="INR_DEPRECIATION" data-sym="${escapeHtml(sym)}">💵 USD/INR Weakens ₹86.50</button>
-          <button class="sim-btn" data-scenario="MARGIN_COMPRESSION" data-sym="${escapeHtml(sym)}">📉 Margins Drop -250bps</button>
+          <button class="sim-btn" data-scenario="CRUDE_SURGE" data-sym="${escapeHtml(sym)}">Crude Spikes $95+</button>
+          <button class="sim-btn" data-scenario="RBI_RATE_HIKE" data-sym="${escapeHtml(sym)}">RBI Hikes Repo +25bps</button>
+          <button class="sim-btn" data-scenario="INR_DEPRECIATION" data-sym="${escapeHtml(sym)}">USD/INR Weakens ₹86.50</button>
+          <button class="sim-btn" data-scenario="MARGIN_COMPRESSION" data-sym="${escapeHtml(sym)}">Margins Drop -250bps</button>
         </div>
         <div class="sim-result-panel hidden" id="sim-result-${data.session_id}">
           <div class="sim-impact-tag" id="sim-impact-${data.session_id}"></div>
@@ -482,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <h3 style="font-size: 15px; color: ${pm.friction_score >= 70 ? 'var(--accent-red)' : 'var(--accent-orange)'};">
-          ${escapeHtml(pm.headline_verdict)}
+          ${escapeHtml(stripEmojis(pm.headline_verdict))}
         </h3>
 
         <div class="adversarial-body">${formattedDebate}</div>
@@ -494,13 +500,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
           <strong style="font-size: 12px; color: var(--text-primary);">Key Institutional Pre-Mortem Takeaways:</strong>
           <ul style="margin: 6px 0 0 18px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
-            ${(pm.educational_takeaways || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+            ${(pm.educational_takeaways || []).map((item) => `<li>${escapeHtml(stripEmojis(item))}</li>`).join("")}
           </ul>
         </div>
 
         <div class="action-buttons-row">
           <button class="rebuttal-btn" data-sym="${escapeHtml(sym)}">
-            <span>🥊 Spar / Rebut</span>
+            <span>Spar / Rebut</span>
           </button>
           <button class="export-btn" onclick="window.open('/api/export/${data.session_id}?format=pdf', '_blank')">
             <span>Download Pre-Mortem One-Pager (PDF)</span>
@@ -514,7 +520,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     container.innerHTML = cardHtml;
     chatStream.appendChild(container);
-    chatStream.scrollTop = chatStream.scrollHeight;
+    requestAnimationFrame(() => {
+      chatStream.scrollTop = chatStream.scrollHeight;
+    });
 
     // Attach click handlers to citation badges
     container.querySelectorAll(".citation-badge").forEach((badge) => {
@@ -560,7 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const sData = await sRes.json();
           impactTag.textContent = `${sData.scenario_title} → ${sData.estimated_impact}`;
           mechText.textContent = sData.mechanism;
-          warnText.textContent = `⚠️ Red-Team Warning: ${sData.red_team_warning}`;
+          warnText.textContent = `Red-Team Warning: ${stripEmojis(sData.red_team_warning)}`;
         } catch (sErr) {
           impactTag.textContent = "Simulation error: " + sErr.message;
         }
@@ -651,6 +659,120 @@ document.addEventListener("DOMContentLoaded", () => {
       evidenceSource.textContent = `${fact.source} (${fact.category})`;
       evidenceContext.textContent = fact.context || `Value: ${fact.value} ${fact.unit}`;
     }
+  }
+
+  function stripEmojis(str) {
+    if (!str) return "";
+    return str.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}\u{200D}\u{FE0F}]/gu, "").trim();
+  }
+
+  function inlineFormat(str) {
+    let res = escapeHtml(str);
+    // Bold + Italic: ***text***
+    res = res.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    // Bold: **text**
+    res = res.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Italic: *text*
+    res = res.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Inline Code: `text`
+    res = res.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Citations: [LKB-XX]
+    res = res.replace(/\[(LKB-\d{2})\]/g, (match, id) => {
+      return `<span class="citation-badge" data-fact-id="${id}">[${id}]</span>`;
+    });
+    return res;
+  }
+
+  function formatMarkdown(rawText) {
+    if (!rawText) return "";
+    const cleaned = stripEmojis(rawText);
+    let html = "";
+
+    if (typeof marked !== "undefined" && typeof marked.parse === "function") {
+      try {
+        marked.setOptions({
+          gfm: true,
+          breaks: true
+        });
+        html = marked.parse(cleaned);
+      } catch (err) {
+        console.warn("marked.parse error, using fallback:", err);
+        html = fallbackMarkdown(cleaned);
+      }
+    } else {
+      html = fallbackMarkdown(cleaned);
+    }
+
+    // Transform [LKB-XX] citation badges into interactive pill badges
+    html = html.replace(/\[(LKB-\d{2})\]/g, (match, id) => {
+      return `<span class="citation-badge" data-fact-id="${id}">[${id}]</span>`;
+    });
+
+    return html;
+  }
+
+  function fallbackMarkdown(cleaned) {
+    const lines = cleaned.split(/\r?\n/);
+    const out = [];
+    let inList = false;
+    let listType = "";
+
+    function closeList() {
+      if (inList) {
+        out.push(listType === "ul" ? "</ul>" : "</ol>");
+        inList = false;
+        listType = "";
+      }
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) {
+        closeList();
+        continue;
+      }
+      if (line.startsWith("### ")) {
+        closeList();
+        out.push(`<h4>${inlineFormat(line.slice(4))}</h4>`);
+        continue;
+      }
+      if (line.startsWith("## ")) {
+        closeList();
+        out.push(`<h3>${inlineFormat(line.slice(3))}</h3>`);
+        continue;
+      }
+      if (line.startsWith("# ")) {
+        closeList();
+        out.push(`<h3>${inlineFormat(line.slice(2))}</h3>`);
+        continue;
+      }
+      const ulMatch = line.match(/^[-*]\s+(.*)$/);
+      if (ulMatch) {
+        if (!inList || listType !== "ul") {
+          closeList();
+          out.push("<ul>");
+          inList = true;
+          listType = "ul";
+        }
+        out.push(`<li>${inlineFormat(ulMatch[1])}</li>`);
+        continue;
+      }
+      const olMatch = line.match(/^(\d+)\.\s+(.*)$/);
+      if (olMatch) {
+        if (!inList || listType !== "ol") {
+          closeList();
+          out.push("<ol>");
+          inList = true;
+          listType = "ol";
+        }
+        out.push(`<li>${inlineFormat(olMatch[2])}</li>`);
+        continue;
+      }
+      closeList();
+      out.push(`<p>${inlineFormat(line)}</p>`);
+    }
+    closeList();
+    return out.join("\n");
   }
 
   function escapeHtml(str) {

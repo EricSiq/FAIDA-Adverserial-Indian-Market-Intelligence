@@ -103,3 +103,40 @@ def test_finnhub_client_empty_key_graceful():
     res = FinnhubClient.get_company_news("INFY", api_key="")
     assert res == []
 
+def test_web_search_keyword_extraction():
+    from backend.scrapers.web_search_client import WebSearchClient
+    keywords = WebSearchClient.extract_query_keywords(
+        "Thinking of selling Reliance at ₹2,900 because crude prices are volatile",
+        symbol="RELIANCE"
+    )
+    assert "crude" in keywords
+    assert "volatile" in keywords
+    assert "prices" in keywords
+    assert "reliance" not in keywords
+
+def test_web_search_ranking_and_deduplication():
+    from backend.scrapers.web_search_client import WebSearchClient
+    sample_articles = [
+        {
+            "title": "General Market Rally in Auto Sector",
+            "snippet": "Nifty Auto jumps 1%",
+            "source": "NewsA"
+        },
+        {
+            "title": "Crude Oil Surge Threatens Refiner Margins",
+            "snippet": "Brent crude hits $110 per barrel",
+            "source": "NewsB"
+        },
+        {
+            "title": "Crude Oil Surge Threatens Refiner Margins",  # duplicate
+            "snippet": "Duplicate headline",
+            "source": "NewsC"
+        }
+    ]
+    ranked = WebSearchClient._rank_and_deduplicate(sample_articles, ["crude", "oil"], limit=2)
+    assert len(ranked) == 2
+    # The article matching 'crude' and 'oil' must be ranked first
+    assert "Crude Oil" in ranked[0]["title"]
+    assert ranked[0]["is_query_matched"] is True
+
+

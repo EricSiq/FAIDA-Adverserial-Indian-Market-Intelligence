@@ -106,6 +106,20 @@ class EducatorAgent:
             )
         ]
 
+        # Dynamically inject query-targeted contextual risks directly addressing user premise
+        for f in lkb.facts:
+            if "Query-Targeted" in f.metric or "Brent Crude" in f.metric or "Dividend Yield" in f.metric or "Auto Cyclicality" in f.metric:
+                bearish_risks.insert(
+                    0,
+                    PreMortemRiskItem(
+                        risk_title=f"Core Thesis Headwind ({f.metric})",
+                        severity="HIGH" if thesis.action == InvestmentAction.BUY else "MEDIUM",
+                        argument=f"{f.value} - {f.context}",
+                        lkb_citations=[f.id]
+                    )
+                )
+                break
+
         # 4. Educational Takeaways for retail investors
         educational_takeaways = [
             "Delivery Volume %: Unlike US markets, Indian exchanges publish delivery statistics daily. Always check if big players are taking shares home or just churning intraday.",

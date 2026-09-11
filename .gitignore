@@ -26,9 +26,20 @@ venv/
 ENV/
 env/
 
+# Testing & Coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
 # Environment Variables & Secrets
 .env
+*.env
 *.env.local
+*.env.*.local
 
 # Databases & Cache
 *.duckdb
@@ -37,14 +48,38 @@ env/
 *.sqlite3
 faida_cache/
 data/*.duckdb
+data/*.duckdb.wal
+data/*.wal
+data/*.tmp
+!data/.gitkeep
 
-# IDE
+# User Conversations, Private Decisions & Journal (Strict Privacy)
+faida_journal.duckdb*
+faida_features.duckdb*
+*journal*.duckdb*
+*journal*.sqlite*
+*decision*.duckdb*
+data/*journal*
+data/*feature*
+data/faida_journal.duckdb
+data/faida_journal.duckdb.wal
+data/faida_features.duckdb
+data/faida_features.duckdb.wal
+
+# Generated Exports & Logs
+*.log
+temp/
+tmp/
+*.pdf
+!docs/examples/*.pdf
+
+# IDE & Editor
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+# OS & Filesystem
 Thumbs.db
 ehthumbs.db
 Desktop.ini
