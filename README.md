@@ -11,6 +11,62 @@
 
 ---
 
+## End-to-End Decision Workflow
+
+```mermaid
+flowchart TD
+    subgraph Input["1. Investor Input Layer"]
+        User["Investor / Retail Trader"] -->|"Natural Language Thesis (e.g., Buy Tata Motors at ₹980)"| InputBox["Thesis Submission + 6-Level Tone Continuum Slider"]
+    end
+
+    subgraph IPC["2. Local API & Ingestion Gateway"]
+        InputBox -->|"POST /api/analyze (Pydantic Validation)"| FastAPI["FastAPI / Uvicorn ASGI Server (Input Sanitization & Injection Defense)"]
+    end
+
+    subgraph Agents["3. Multi-Agent Analysis Swarm"]
+        FastAPI --> Parser["Parser Agent (Extracts Symbol, Action, Target, Rationale)"]
+        FastAPI --> Bias["Bias Agent (Detects FOMO, Anchoring, Sunk Cost -> Friction Index 0-100)"]
+        
+        Parser --> Ingest["Data Ingestion Hub"]
+        Ingest --> NSE["NSE Live Scraper (Delivery % & Circuits via TLS Impersonation)"]
+        Ingest --> Screener["Screener.in Forensic Agent (3-Year CFO vs PAT Accrual Check)"]
+        Ingest --> Macro["Global Macro Client (Brent Crude, US 10Y, DXY via FRED)"]
+        Ingest --> WebNews["Web Search Intelligence (Google News RSS & Yahoo Finance)"]
+    end
+
+    subgraph Grounding["4. Deterministic Grounding Engine"]
+        NSE --> LKB["Local Knowledge Base / LKB (Immutable Fact Serialization)"]
+        Screener --> LKB
+        Macro --> LKB
+        WebNews --> LKB
+        LKB <--> FeatureCache[("DuckDB Feature Store (15-Min TTL Cache)")]
+        LKB --> CitationGen["Citation Indexer (Assigns Immutable [LKB-01] to [LKB-XX] Tags)"]
+    end
+
+    subgraph Inference["5. Multi-Tier Grounded Inference Gateway"]
+        CitationGen --> LLMGateway{"Unified LLM Gateway (LLMProvider)"}
+        Bias --> LLMGateway
+        
+        LLMGateway -->|"Primary (Default Cloud)"| Groq["Groq Cloud API (qwen/qwen3.8-27b Free Tier)"]
+        Groq -.->|"Cascade on Failure"| GroqCascade["Groq Multi-Model Fallback (qwen3.6-27b / gpt-oss-120b)"]
+        LLMGateway -.->|"Local Fallback (Offline)"| Ollama["Local Ollama Engine (gemma4:e4b via IPv4 Loopback)"]
+        LLMGateway -.->|"Zero-Error Resilient Fallback"| DetEngine["Deterministic Rule Engine (Direct LKB Fact Synthesis)"]
+        
+        Groq --> Sanitize["Reasoning Sanitizer (Strips internal reasoning blocks)"]
+        GroqCascade --> Sanitize
+        Ollama --> Sanitize
+    end
+
+    subgraph Output["6. Adversarial Synthesis & Decision Persistence"]
+        Sanitize --> TerminalUI["Zerodha / Bloomberg Dark Terminal (Auto-scrolling Chat & Interactive [LKB-XX] Badges)"]
+        DetEngine --> TerminalUI
+        TerminalUI --> PDFReport["Exportable Pre-Mortem One-Pager (ReportLab Native PDF Generator)"]
+        TerminalUI --> Journal[("DuckDB Decision Journal (Local Historical Audit Trail)")]
+    end
+```
+
+---
+
 ## Tech Stack
 
 FAIDA is engineered with a **Python-first, zero-overhead** philosophy. It avoids heavy browser runtimes (Electron/Chromium builds > 400MB) in favor of native OS webviews and local-first execution (< 120MB RAM idle).
