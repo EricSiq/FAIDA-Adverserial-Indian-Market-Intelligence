@@ -25,7 +25,8 @@ class BrokerClient:
         if not api_key:
             return None
 
-        clean_symbol = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+        import re
+        clean_symbol = re.sub(r"[^A-Z0-9&_-]", "", symbol.strip().upper().replace(".NS", "").replace(".BO", ""))
         broker = cls.get_broker_name()
 
         # Upstox V2 Quote Adapter Mock/Interface

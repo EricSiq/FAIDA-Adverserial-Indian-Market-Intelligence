@@ -62,7 +62,7 @@ class BSEClient:
                 resp = client.get(cls.BASE_URL, params=params)
                 if resp.status_code == 200:
                     data = resp.json()
-                    table = data.get("Table", [])
+                    table = data.get("Table", []) if isinstance(data, dict) else []
                     return cls._parse_announcements(table)
         except Exception as err:
             logger.debug(f"BSE announcements fetch error for {clean_symbol}: {err}")
@@ -70,7 +70,9 @@ class BSEClient:
         return []
 
     @classmethod
-    def _parse_announcements(cls, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _parse_announcements(cls, items: Any) -> List[Dict[str, Any]]:
+        if not isinstance(items, list):
+            return []
         parsed = []
         governance_keywords = [
             "resignation", "auditor", "credit rating", "downgrade", "sebi",

@@ -142,6 +142,17 @@ def test_export_endpoint_success_and_escaping():
     # Explainability check: ensure references table exists
     assert "Grounded Evidence Sources &amp; Scraped Verification Links" in html_text or "Grounded Evidence Sources" in html_text
 
+def test_macro_global_endpoint():
+    resp = client.get("/api/macro/global")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "brent_crude_usd" in data
+    assert "us_10y_yield_pct" in data
+    assert "us_dollar_index" in data
 
-
-
+def test_cache_clear_expired_endpoint():
+    resp = client.post("/api/cache/clear-expired")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "ok"
+    assert "purged_count" in data

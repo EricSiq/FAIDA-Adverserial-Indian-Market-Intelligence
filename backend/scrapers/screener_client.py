@@ -133,12 +133,15 @@ class ScreenerClient:
                     break
 
         # Compute Accrual Quality Divergence
-        if cfo_values and pat_values and len(cfo_values) == len(pat_values):
-            tot_cfo = sum(cfo_values)
-            tot_pat = sum(pat_values)
+        min_len = min(len(cfo_values), len(pat_values))
+        if min_len > 0:
+            cfo_trimmed = cfo_values[-min_len:]
+            pat_trimmed = pat_values[-min_len:]
+            tot_cfo = sum(cfo_trimmed)
+            tot_pat = sum(pat_trimmed)
             result["forensics"] = {
-                "recent_cfo": cfo_values,
-                "recent_pat": pat_values,
+                "recent_cfo": cfo_trimmed,
+                "recent_pat": pat_trimmed,
                 "cumulative_3y_cfo": round(tot_cfo, 2),
                 "cumulative_3y_pat": round(tot_pat, 2),
             }

@@ -182,10 +182,30 @@ FAIDA is engineered strictly as an **Adversarial Red-Team & Educational Invalida
 
 ---
 
-## 9. Phased Asset Rollout
+## 9. Phased Execution Architecture (Phases 1 & 2)
 
-* **Phase 1 (Current Core)**: **NSE & BSE Equities** (Large-cap, Mid-cap, Small-cap). Real-time quotes, delivery volume spikes, Screener.in balance sheet forensics, and 6-level red-teaming.
-* **Phase 2 (Immediate Follow-up)**: **Indian Government Bonds & SGBs** (CCIL 10Y G-Sec yield curve, duration risk, tax-bracket trade-offs) and **MCX Commodities** (Gold/Silver hedge ratios, Crude Oil impact on sector margins).
+* **Phase 1: Core Swarm & Offline Grounding**:
+  * NSE & BSE Equities (Large, Mid, Small caps).
+  * Real-time quotes, delivery volume spikes, Screener.in balance sheet extraction, and 6-level Red-Team continuum.
+  * Embedded DuckDB Decision Journal for trade audit trail.
+
+* **Phase 2.1: Scraper Resilience & Anti-Bot Hardening**:
+  * `curl_cffi` TLS/JA3 impersonation (`chrome120`) bypassing Cloudflare / Akamai WAF blocks on NSE India endpoints.
+  * Screener.in 3-Year Cash Flow from Operations (CFO) vs. Net Profit (PAT) forensic accrual divergence calculation (`cfo_to_pat_ratio` < 0.70 red flag).
+  * BSE Corporate Announcements client (`BSEClient`) with automated governance risk filters (auditor resignations, SEBI inquiries, rating downgrades).
+
+* **Phase 2.2: Statistical LKB Context & Multi-Temporal Distributions**:
+  * 52-Week Range Percentile distribution placement showing exact deviation from cyclic highs.
+  * Multi-year cumulative CFO/PAT ratio facts integrated into LKB packets.
+  * Dynamic India VIX volatility regime categorization and 10-Year Benchmark G-Sec spread calculation.
+
+* **Phase 2.3: Global Macro Engine & Pluggable Broker API Gateway**:
+  * `FREDClient` integration fetching Brent Crude oil, US 10-Year Treasury Yield, and Broad US Dollar Index (DXY) with calibrated offline fallbacks.
+  * `BrokerClient` pluggable read-only interface supporting zero-friction adapters for Upstox, Angel One SmartAPI, and Dhan.
+
+* **Phase 2.4: DuckDB Local Feature Store & Caching Layer**:
+  * Sub-15ms high-frequency feature cache (`market_features_cache`) with 15-minute TTL for on-demand equity packets.
+  * Thread-safe connection lifecycle with automatic stale record eviction (`clear_expired()`) and zero-repetition remote scraping.
 
 ---
 
@@ -198,8 +218,8 @@ FAIDA is engineered strictly as an **Adversarial Red-Team & Educational Invalida
    * Live volatility tracker mapping market regimes: Low Volatility/Complacency (<13), Normal (13–18), Elevated Volatility (18–24), and Extreme Panic (>24).
 3. **Interactive Scenario Stress Tester (`SimulatorAgent`)**:
    * Real-time "What-If?" simulator modeling sudden shocks: Crude Oil spiking to $95+, RBI hiking repo rates by 25 bps, USD/INR depreciating past ₹86.50, and raw material EBITDA margin compression.
-4. **Exportable Pre-Mortem One-Pager**:
-   * Generates a printable, institutional-grade audit one-pager with an execution checklist and signature line for personal trade journals.
+4. **Institutional Pre-Mortem One-Pager Export (`PreMortemPDFGenerator`)**:
+   * Clean, professional PDF generator engineered with ReportLab, featuring complete XML escaping to prevent injection vulnerabilities, comprehensive references/evidence audit trails, and zero print dependencies.
 
 ---
 

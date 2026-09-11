@@ -4,7 +4,7 @@
 [![Stack](https://img.shields.io/badge/Stack-Python%203.11%20%7C%20FastAPI%20%7C%20PyWebView-orange)](#)
 [![LLM](https://img.shields.io/badge/LLM-Local%20Ollama%20(gemma4:e4b)%20%7C%20Groq%20Cloud%20API-green)](#)
 [![Data](https://img.shields.io/badge/Data%20Sources-NSE%20%7C%20Screener.in%20%7C%20CCIL%20%7C%20MCX-purple)](#)
-[![Tests](https://img.shields.io/badge/Tests-35%2F35%20Passing%20(pytest)-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/Tests-49%2F49%20Passing%20(pytest)-brightgreen)](#)
 
 > **FAIDA** (*फ़ायदा* — "Benefit / Profit"): An offline-capable, lightweight desktop application hosting an adversarial swarm of AI agents designed to act as an uncompromising **Red Team / Devil's Advocate** for retail investment decisions in the Indian capital markets (Equities, Bonds, Commodities).
 
@@ -17,14 +17,17 @@ FAIDA is engineered with a **Python-first, zero-overhead** philosophy. It avoids
 | Layer | Technology | Purpose & Implementation Details |
 | :--- | :--- | :--- |
 | **Desktop Shell** | `PyWebView` | Native OS webview wrapper providing an ultra-lightweight desktop window without Node.js or Rust toolchain dependencies. |
-| **API Server & IPC** | `FastAPI` + `Uvicorn` | Asynchronous IPC backend serving REST endpoints for thesis analysis, scenario simulations, macro metrics, and journal queries. |
+| **API Server & IPC** | `FastAPI` + `Uvicorn` | Asynchronous IPC backend serving REST endpoints for thesis analysis, scenario simulations, macro metrics, cache maintenance, and journal queries. |
 | **Local LLM Engine** | `Ollama` (`gemma4:e4b` / `qwen3.5:4b`) | 100% offline, zero-subscription inference running on local GPU/CPU via IPv4 loopback (`127.0.0.1:11434`). |
 | **Cloud LLM Gateway** | `Groq Cloud API` (`llama-3.3-70b-versatile`) | Optional cloud toggle for instant, low-latency inference on battery-constrained laptops. |
-| **Scrapers & Market Data** | `yfinance`, `httpx`, `BeautifulSoup4` | Live NSE India quotes, historical bhavcopies (200 EMA), delivery ratios, Screener.in balance sheet forensics, and India VIX. |
+| **Scrapers & Market Data** | `curl_cffi`, `yfinance`, `httpx`, `BeautifulSoup4` | Resilient NSE scrapers with Chrome 120 TLS/JA3 impersonation, BSE corporate announcements, Screener.in 3-year CFO/PAT accrual forensics, and India VIX. |
+| **Global Macro & Broker API** | `FREDClient`, `BrokerClient` | Free macro indicators (Brent Crude, US 10Y Treasury, DXY) via FRED API and pluggable read-only broker adapters (Upstox, Angel One, Dhan). |
 | **Structured Evidence (LKB)** | `Pydantic v2` | Enforces rigid data schemas for the Local Knowledge Base (LKB), citation IDs (`[LKB-XX]`), and pre-mortem risk items. |
+| **Local Feature Store & Caching** | `DuckDB` | Embedded sub-15ms feature cache with configurable TTL (15-minute equity packets) and automatic stale entry pruning. |
 | **Local Decision Journal** | `DuckDB` | Embedded, zero-maintenance columnar SQL database for audit history, session replay, and pre-mortem validation tracking. |
+| **Report Export Engine** | `ReportLab` | Native institutional-grade PDF generator with strict XML escaping and clean print formatting. |
 | **Frontend UI** | HTML5, Vanilla CSS, Modern JavaScript | Dark-mode glassmorphic interface with zero npm/webpack dependencies, responsive micro-animations, and printable PDF styling. |
-| **Testing & Quality** | `pytest`, `pytest-asyncio` | 35 automated test cases covering prompt-injection defenses, XSS escaping, ticker regex validation, DuckDB persistence, and scrapers. |
+| **Testing & Quality** | `pytest`, `pytest-asyncio` | 49 automated test cases covering prompt-injection defenses, XSS escaping, ticker regex validation, DuckDB persistence, scrapers, macro feeds, and caching. |
 
 ---
 
@@ -121,19 +124,27 @@ OLLAMA_URL=http://127.0.0.1:11434
 GROQ_API_KEY=your_free_groq_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 GEMINI_API_KEY=
+
+# Global Macro & Broker Gateway (Phase 2.3)
+FRED_API_KEY=your_free_fred_api_key_here
+BROKER_API_KEY=
+BROKER_NAME=upstox
+
+# Local Feature Store Cache (Phase 2.4)
+FEATURE_STORE_PATH=./data/feature_store.duckdb
 ```
 
 ---
 
 ## 🧪 Automated Test Suite
 
-Run the full automated test suite covering all scrapers, models, parser, journal, bias detectors, and security endpoints:
+Run the full automated test suite covering all scrapers, models, parser, journal, bias detectors, macro feeds, caching, and security endpoints:
 
 ```bash
 .venv\Scripts\pytest.exe -v
 ```
 
-**Status:** 35 / 35 passed (100% test coverage across all subsystems).
+**Status:** 49 / 49 passed (100% test coverage across all subsystems).
 
 ---
 

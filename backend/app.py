@@ -57,10 +57,26 @@ class SimulateRequest(BaseModel):
     symbol: str = Field(..., min_length=1, max_length=20, pattern=r"^[A-Za-z0-9&._-]+$")
     scenario_type: str = Field(..., pattern=r"^(CRUDE_SURGE|RBI_RATE_HIKE|INR_DEPRECIATION|MARGIN_COMPRESSION)$")
 
+from backend.scrapers.fred_client import FREDClient
+
 @app.get("/api/macro/vix")
 def get_vix_gauge():
     """Returns India VIX macro weather regime."""
     return MacroClient.get_vix_status()
+
+@app.get("/api/macro/global")
+def get_global_macro():
+    """Returns global macro snapshot: Brent Crude, US 10Y Yield, and DXY."""
+    return FREDClient.get_global_macro_snapshot()
+
+@app.post("/api/cache/clear-expired")
+def clear_expired_cache():
+    """Cleans up stale entries from the DuckDB feature store."""
+    from backend.db.feature_store import FeatureStore
+    store = FeatureStore()
+    purged = store.clear_expired()
+    store.close()
+    return {"status": "ok", "purged_count": purged}
 
 @app.post("/api/simulate")
 def run_scenario_simulation(req: SimulateRequest):
