@@ -182,6 +182,8 @@ Run the full automated test suite covering all scrapers, models, parser, journal
   100% free data pipelines across Indian Equities (NSE/BSE, Screener.in), Fixed Income (CCIL 10Y G-Secs, RBI DBIE), Commodities (MCX), and news feeds.
 * **[03. Decision Framework & Roadmap (`03_DECISION_FRAMEWORK_AND_ROADMAP.md`)](03_DECISION_FRAMEWORK_AND_ROADMAP.md)**:
   Confirmed technical decisions log, architecture choices, and phased delivery roadmap.
+* **[04. Reference Guide & Technical Report (`REFERENCE_GUIDE.md`)](REFERENCE_GUIDE.md)**:
+  Comprehensive reference manual, operational guide, architectural decomposition, and real-world banking/finance usage scope.
 
 ---
 
