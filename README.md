@@ -4,7 +4,7 @@
 [![Stack](https://img.shields.io/badge/Stack-Python%203.11%20%7C%20FastAPI%20%7C%20PyWebView-orange)](#)
 [![LLM](https://img.shields.io/badge/LLM-Local%20Ollama%20(gemma4:e4b)%20%7C%20Groq%20Cloud%20API-green)](#)
 [![Data](https://img.shields.io/badge/Data%20Sources-NSE%20%7C%20Screener.in%20%7C%20CCIL%20%7C%20MCX-purple)](#)
-[![Tests](https://img.shields.io/badge/Tests-50%2F50%20Passing%20(pytest)-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/Tests-52%2F52%20Passing%20(pytest)-brightgreen)](#)
 
 > **FAIDA** (*फ़ायदा* — "Benefit / Profit"): An offline-capable, lightweight desktop application hosting an adversarial swarm of AI agents designed to act as an uncompromising **Red Team / Devil's Advocate** for retail investment decisions in the Indian capital markets (Equities, Bonds, Commodities).
 
@@ -19,15 +19,15 @@ FAIDA is engineered with a **Python-first, zero-overhead** philosophy. It avoids
 | **Desktop Shell** | `PyWebView` | Native OS webview wrapper providing an ultra-lightweight desktop window without Node.js or Rust toolchain dependencies. |
 | **API Server & IPC** | `FastAPI` + `Uvicorn` | Asynchronous IPC backend serving REST endpoints for thesis analysis, scenario simulations, macro metrics, cache maintenance, and journal queries. |
 | **Local LLM Engine** | `Ollama` (`gemma4:e4b` / `qwen3.5:4b`) | 100% offline, zero-subscription inference running on local GPU/CPU via IPv4 loopback (`127.0.0.1:11434`). |
-| **Cloud LLM Gateway** | `Groq Cloud API` (`llama-3.3-70b-versatile`) | Optional cloud toggle for instant, low-latency inference on battery-constrained laptops. |
+| **Cloud LLM Gateway** | `Groq Cloud API` (`openai/gpt-oss-20b`, `llama-3.3-70b`) | Multi-model fallback inference with reasoning token cleanup, delivering sub-2s cloud execution. |
 | **Scrapers & Market Data** | `curl_cffi`, `yfinance`, `httpx`, `BeautifulSoup4` | Resilient NSE scrapers with Chrome 120 TLS/JA3 impersonation, BSE corporate announcements, Screener.in 3-year CFO/PAT accrual forensics, and India VIX. |
-| **Global Macro & Broker API** | `FREDClient`, `BrokerClient` | Free macro indicators (Brent Crude, US 10Y Treasury, DXY) via FRED API and pluggable read-only broker adapters (Upstox, Angel One, Dhan). |
+| **Global Macro & News APIs** | `FREDClient`, `FinnhubClient`, `BrokerClient` | Live Brent Crude, US 10Y Treasury, and DXY via FRED API; live company news and catalysts via Finnhub; and pluggable broker adapters. |
 | **Structured Evidence (LKB)** | `Pydantic v2` | Enforces rigid data schemas for the Local Knowledge Base (LKB), citation IDs (`[LKB-XX]`), and pre-mortem risk items. |
 | **Local Feature Store & Caching** | `DuckDB` | Embedded sub-15ms feature cache with configurable TTL (15-minute equity packets) and automatic stale entry pruning. |
 | **Local Decision Journal** | `DuckDB` | Embedded, zero-maintenance columnar SQL database for audit history, session replay, and pre-mortem validation tracking. |
 | **Report Export Engine** | `ReportLab` | Native institutional-grade PDF generator with strict XML escaping and clean print formatting. |
 | **Frontend UI** | HTML5, Vanilla CSS, Modern JavaScript | Dark-mode glassmorphic interface with zero npm/webpack dependencies, responsive micro-animations, and printable PDF styling. |
-| **Testing & Quality** | `pytest`, `pytest-asyncio` | 49 automated test cases covering prompt-injection defenses, XSS escaping, ticker regex validation, DuckDB persistence, scrapers, macro feeds, and caching. |
+| **Testing & Quality** | `pytest`, `pytest-asyncio` | 52 automated test cases covering prompt-injection defenses, XSS escaping, ticker regex validation, DuckDB persistence, scrapers, macro feeds, Finnhub, and caching. |
 
 ---
 
@@ -144,7 +144,7 @@ Run the full automated test suite covering all scrapers, models, parser, journal
 .venv\Scripts\pytest.exe -v
 ```
 
-**Status:** 50 / 50 passed (100% test coverage across all subsystems).
+**Status:** 52 / 52 passed (100% test coverage across all subsystems).
 
 ---
 

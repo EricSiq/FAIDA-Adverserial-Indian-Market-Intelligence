@@ -30,7 +30,7 @@ class FREDClient:
         if not series_id:
             return {"series": series_key, "value": None, "source": "UNKNOWN"}
 
-        key = api_key or os.getenv("FRED_API_KEY", "").strip()
+        key = api_key if api_key is not None else os.getenv("FRED_API_KEY", "").strip()
 
         if not key:
             # Safe zero-configuration fallback
@@ -52,7 +52,7 @@ class FREDClient:
         }
 
         try:
-            with httpx.Client(timeout=4.0) as client:
+            with httpx.Client(timeout=9.0) as client:
                 resp = client.get(cls.BASE_URL, params=params)
                 if resp.status_code == 200:
                     obs_list = resp.json().get("observations", [])
@@ -93,5 +93,7 @@ class FREDClient:
             "brent_date": brent.get("date"),
             "us_10y_yield_pct": us10y.get("value"),
             "us_dollar_index": dxy.get("value"),
-            "is_live_api": brent.get("source") == "FRED_API"
+            "is_live_api": any(
+                item.get("source") == "FRED_API" for item in [brent, us10y, dxy]
+            )
         }

@@ -67,6 +67,7 @@ class LLMProvider:
 
     @classmethod
     def _call_groq(cls, prompt: str, system_prompt: str) -> str:
+        import re
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {settings.GROQ_API_KEY}",
@@ -77,18 +78,38 @@ class LLMProvider:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        payload = {
-            "model": settings.GROQ_MODEL,
-            "messages": messages,
-            "temperature": 0.2,
-            "max_tokens": 1000
-        }
-        with httpx.Client(timeout=20.0) as client:
-            resp = client.post(url, headers=headers, json=payload)
-            if resp.status_code == 200:
-                data = resp.json()
-                return data["choices"][0]["message"]["content"].strip()
-            raise RuntimeError(f"Groq returned HTTP {resp.status_code}: {resp.text}")
+        # Candidate models prioritizing user setting, then verified high-performance available models
+        candidate_models = [settings.GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+        seen = set()
+        models_to_try = [m for m in candidate_models if m and not (m in seen or seen.add(m))]
+
+        last_err = None
+        with httpx.Client(timeout=25.0) as client:
+            for model_id in models_to_try:
+                payload = {
+                    "model": model_id,
+                    "messages": messages,
+                    "temperature": 0.2,
+                    "max_tokens": 1000
+                }
+                try:
+                    resp = client.post(url, headers=headers, json=payload)
+                    if resp.status_code == 200:
+                        raw = resp.json()["choices"][0]["message"]["content"]
+                        # Strip reasoning chain-of-thought if model emits <think> blocks
+                        cleaned = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+                        return cleaned or raw.strip()
+                    elif resp.status_code == 404:
+                        # Model not available on this tier/account, try next candidate
+                        last_err = f"Model {model_id} not found"
+                        continue
+                    else:
+                        raise RuntimeError(f"Groq returned HTTP {resp.status_code}: {resp.text}")
+                except Exception as e:
+                    last_err = str(e)
+                    continue
+
+        raise RuntimeError(f"All Groq candidate models failed. Last error: {last_err}")
 
     @classmethod
     def _deterministic_fallback(cls, prompt: str) -> str:

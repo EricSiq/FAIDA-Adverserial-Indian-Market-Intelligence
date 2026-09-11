@@ -279,6 +279,22 @@ class LKBBuilder:
         ))
         fact_idx += 1
 
+        # Fact: Finnhub Real-Time News & Global Sentiment
+        from backend.scrapers.finnhub_client import FinnhubClient
+        news_items = FinnhubClient.get_company_news(clean_symbol)
+        if news_items:
+            for item in news_items[:2]:
+                facts.append(LKBFact(
+                    id=f"LKB-{fact_idx:02d}",
+                    category=LKBFactCategory.NEWS,
+                    source=f"FINNHUB_{item.get('source', 'GLOBAL').upper().replace(' ', '_')}",
+                    metric="Market & Company News Catalyst",
+                    value=item.get("headline", "Market News Catalyst"),
+                    unit="",
+                    context=item.get("summary", "")[:240]
+                ))
+                fact_idx += 1
+
         packet = LKBPacket(
             session_id=session_id,
             symbol=clean_symbol,

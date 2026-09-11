@@ -78,3 +78,28 @@ def test_bse_announcements_parsing():
     assert parsed[0]["is_risk_flag"] is True
     assert parsed[1]["is_risk_flag"] is False
 
+def test_finnhub_article_parsing():
+    from backend.scrapers.finnhub_client import FinnhubClient
+    sample_items = [
+        {
+            "headline": "Infosys Announces Global AI Partnership with Tech Giant",
+            "summary": "Infosys expands enterprise generative AI footprint across financial services clients.",
+            "source": "Reuters",
+            "url": "https://finnhub.io/news/123",
+            "datetime": 1788880000
+        },
+        {
+            "headline": "",
+            "summary": "Empty headline item should be filtered"
+        }
+    ]
+    parsed = FinnhubClient._parse_articles(sample_items)
+    assert len(parsed) == 1
+    assert parsed[0]["headline"] == "Infosys Announces Global AI Partnership with Tech Giant"
+    assert parsed[0]["source"] == "Reuters"
+
+def test_finnhub_client_empty_key_graceful():
+    from backend.scrapers.finnhub_client import FinnhubClient
+    res = FinnhubClient.get_company_news("INFY", api_key="")
+    assert res == []
+

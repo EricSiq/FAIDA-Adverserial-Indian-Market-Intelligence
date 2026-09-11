@@ -29,6 +29,7 @@ class Settings(BaseModel):
     
     # Extended Macro & Broker APIs (Optional)
     FRED_API_KEY: str = os.getenv("FRED_API_KEY", "")
+    FINNHUB_API_KEY: str = os.getenv("FINNHUB_API_KEY", "")
     BROKER_API_KEY: str = os.getenv("BROKER_API_KEY", "")
     BROKER_NAME: str = os.getenv("BROKER_NAME", "upstox")
 
