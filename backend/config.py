@@ -27,9 +27,16 @@ class Settings(BaseModel):
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     ACTIVE_PROVIDER: str = os.getenv("FAIDA_PROVIDER", "ollama")  # 'ollama' or 'groq'
     
+    # Extended Macro & Broker APIs (Optional)
+    FRED_API_KEY: str = os.getenv("FRED_API_KEY", "")
+    BROKER_API_KEY: str = os.getenv("BROKER_API_KEY", "")
+    BROKER_NAME: str = os.getenv("BROKER_NAME", "upstox")
+
     # Database
     DB_PATH: str = str(DATA_DIR / "faida_journal.duckdb")
+    FEATURE_STORE_PATH: str = str(DATA_DIR / "faida_features.duckdb")
     CACHE_EXPIRY_MINUTES: int = 15
     FUNDAMENTALS_CACHE_HOURS: int = 24
 
 settings = Settings()
+
